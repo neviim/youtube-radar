@@ -1,0 +1,98 @@
+# Um serviço só: o registro de canal (Fase 4) acontece dentro do próprio ciclo, não
+# num processo separado como o `responder` do projeto irmão. Use o wrapper
+# `./ytr.sh` — ele resolve os caminhos do host (o `~` do .env, seu UID, o vault) e
+# exporta para cá.
+#
+#   ./ytr.sh dev doctor            checa config, vault e Discord (vault :ro)
+#   ./ytr.sh dev ciclo --seco      ensaio, não escreve nada
+#   ./ytr.sh dev test              suíte de testes
+#   ./ytr.sh dev shell             bash dentro do container
+#   ./ytr.sh prod up               sobe o agendador em background
+#   ./ytr.sh prod logs             acompanha o log
+#   ./ytr.sh prod run ciclo --seco execução avulsa, fora do agendador
+#   ./ytr.sh prod status           estado e saúde do container
+#   ./ytr.sh prod down             derruba
+#
+# Chamar `docker compose` na mão funciona, mas exige exportar YTR_HOST_VAULT e
+# amigos antes — por isso os `:?` abaixo, que falham alto em vez de montar a pasta
+# errada em cima do seu vault.
+
+name: youtube-radar
+
+services:
+  # ------------------------------------------------------------------ prod --
+  # Sobe uma vez e fica. O agendador dentro do container chama `ytr ciclo` na
+  # cadência configurada; o container reinicia sozinho se a máquina reiniciar.
+  prod:
+    profiles: ["prod"]
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: prod
+      args:
+        UID: ${YTR_UID:-1000}
+        GID: ${YTR_GID:-1000}
+    image: youtube-radar:prod
+    container_name: ytr-prod
+    user: "${YTR_UID:-1000}:${YTR_GID:-1000}"
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      OBSIDIAN_VAULT: /vault
+      TZ: ${TIMEZONE:-UTC}
+      CLAUDE_CONFIG_DIR: /home/ytr/.claude
+      CODEX_HOME: /home/ytr/.codex
+      YTR_CICLO_INTERVALO: ${YTR_CICLO_INTERVALO:-}
+      YTR_RUN_ON_START: ${YTR_RUN_ON_START:-1}
+      YTR_HEALTH_TOLERANCE: ${YTR_HEALTH_TOLERANCE:-3600}
+    volumes:
+      - ${YTR_HOST_VAULT:?rode ./ytr.sh, ou exporte YTR_HOST_VAULT com o caminho absoluto do vault}:/vault:ro
+      - ./.state:/app/.state
+      - ./canais.yaml:/app/canais.yaml
+      # Login do claude/codex compartilhado com o host, mesmo desenho do
+      # discord-link-brain. Hoje YTR_LLM_BACKEND=none é o único caminho
+      # implementado (Fase 8 não existe ainda) — sem as variáveis abaixo
+      # exportadas, isto monta só o placeholder que explica o que falta.
+      - ${YTR_CLAUDE_BIN:-./docker/placeholder/claude}:/usr/local/bin/claude:ro
+      - ${YTR_CLAUDE_HOME:-./docker/placeholder/home}:/home/ytr/.claude
+      - ${YTR_CODEX_BIN:-./docker/placeholder/claude}:/usr/local/bin/codex:ro
+      - ${YTR_CODEX_HOME:-./docker/placeholder/home}:/home/ytr/.codex
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  # ------------------------------------------------------------------- dev --
+  # Efêmero e falador. O código vem do host por bind mount: editou, rodou. O
+  # vault entra somente-leitura por padrão — o radar não escreve nele por
+  # desenho (ytr/gosto.py), mas o container não precisa depender disso sozinho.
+  dev:
+    profiles: ["dev"]
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: dev
+      args:
+        UID: ${YTR_UID:-1000}
+        GID: ${YTR_GID:-1000}
+    image: youtube-radar:dev
+    user: "${YTR_UID:-1000}:${YTR_GID:-1000}"
+    env_file:
+      - .env
+    environment:
+      OBSIDIAN_VAULT: /vault
+      TZ: ${TIMEZONE:-UTC}
+      CLAUDE_CONFIG_DIR: /home/ytr/.claude
+      CODEX_HOME: /home/ytr/.codex
+      PYTHONDONTWRITEBYTECODE: "1"
+    volumes:
+      - .:/app
+      - ${YTR_DEV_VAULT:?rode ./ytr.sh, ou exporte YTR_DEV_VAULT}:/vault:${YTR_DEV_VAULT_MODE:-ro}
+      - ${YTR_CLAUDE_BIN:-./docker/placeholder/claude}:/usr/local/bin/claude:ro
+      - ${YTR_CLAUDE_HOME:-./docker/placeholder/home}:/home/ytr/.claude
+      - ${YTR_CODEX_BIN:-./docker/placeholder/claude}:/usr/local/bin/codex:ro
+      - ${YTR_CODEX_HOME:-./docker/placeholder/home}:/home/ytr/.codex
+    stdin_open: true
+    tty: true

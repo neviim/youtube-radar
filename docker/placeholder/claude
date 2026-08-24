@@ -1,0 +1,11 @@
+#!/bin/sh
+# Placeholder montado em /usr/local/bin/claude quando o binário do host não foi
+# passado para o container. Existe para o erro ser legível em vez de um "arquivo
+# não encontrado" genérico vindo do subprocess.
+#
+# Hoje YTR_LLM_BACKEND=none é o único caminho implementado (a Fase 8, que liga o
+# modelo, ainda não existe) — este placeholder é preparo para quando ela chegar.
+echo "claude: binário do host não montado neste container." >&2
+echo "  Exporte YTR_CLAUDE_BIN=/caminho/para/claude e YTR_CLAUDE_HOME=~/.claude" >&2
+echo "  antes de ./ytr.sh, ou use YTR_LLM_BACKEND=none no .env." >&2
+exit 127
