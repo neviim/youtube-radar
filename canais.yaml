@@ -1,0 +1,32 @@
+# Canais monitorados pelo youtube-radar.
+# Editável à mão: apagar uma linha para de monitorar; `ativo: false` pausa
+# sem perder o histórico. Pare o container antes de editar, ou use
+# `ytr canais desativar` — os dois tomam o mesmo lock.
+canais:
+- channel_id: UC_x5XG1OV2P6uZZ5FSM9Ttw
+  handle: '@GoogleDevelopers'
+  nome: Google for Developers
+  url_original: https://youtube.com/@GoogleDevelopers
+  cadastrado_em: '2026-08-24T16:32:35+00:00'
+  ativo: true
+  avisar_shorts: false
+  transcricao: false
+  falhas: 0
+- channel_id: UCnjgxChqYYnyoqO4k_Q1d6Q
+  handle: '@TheDiaryOfACEOClips'
+  nome: The Diary Of A CEO Clips
+  url_original: https://www.youtube.com/@TheDiaryOfACEOClips
+  cadastrado_em: '2026-08-24T21:06:03+00:00'
+  ativo: true
+  avisar_shorts: false
+  transcricao: false
+  falhas: 0
+- channel_id: UC415bOPUcGSamy543abLmRA
+  handle: '@cleoabram'
+  nome: Cleo Abram
+  url_original: https://youtube.com/@cleoabram
+  cadastrado_em: '2026-08-24T16:32:34+00:00'
+  ativo: true
+  avisar_shorts: false
+  transcricao: false
+  falhas: 0
