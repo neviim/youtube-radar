@@ -93,7 +93,10 @@ REDE_PRIVADA = [
     ("IP de CGNAT", r"\b100\.(?:6[4-9]|[7-9]\d|1[01]\d|12[0-7])\.\d{1,3}\.\d{1,3}\b"),
 ]
 
-CASA_DE_ALGUEM = re.compile(r"/home/(?!<|\$|usuario\b|user\b|você\b)[a-z][a-z0-9_-]{1,}/")
+# `ytr` é o usuário que o container cria (docker/Dockerfile) — `/home/ytr/` é caminho
+# de imagem, não a casa de uma pessoa. Mesma isenção que o discord-link-brain faz para
+# `dlb` no seu próprio `CASA_DE_ALGUEM`.
+CASA_DE_ALGUEM = re.compile(r"/home/(?!<|\$|usuario\b|user\b|você\b|ytr\b)[a-z][a-z0-9_-]{1,}/")
 
 # Snowflake do Discord tem 17 a 20 dígitos. Id de canal não abre porta nenhuma sem
 # token, mas revela que o servidor existe — e colar um id real num teste durante

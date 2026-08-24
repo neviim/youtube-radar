@@ -34,6 +34,7 @@ import os
 import sys
 from pathlib import Path
 
+from . import cadastro as mod_cadastro
 from . import canal as mod_canal
 from . import config as mod_config
 from . import feed as mod_feed
@@ -41,8 +42,9 @@ from . import gosto as mod_gosto
 from . import ledger as mod_ledger
 from . import trava as mod_trava
 from .canal import Canais, CanalError, classificar, handle_por_oembed, resolver
-from .ciclo import PostagemBloqueada, rodar
+from .ciclo import PostagemBloqueada, PublicadorDiscord, rodar
 from .config import Config, ConfigError
+from .discord_client import DiscordClient
 from .rede import Cliente
 from .state import Estado, EstadoNaoGravavel, Saude, preflight
 from .trava import TravaOcupada
@@ -81,6 +83,12 @@ def _cfg() -> Config:
     cfg = Config.from_env()
     cfg.validar_marcas()
     return cfg
+
+
+def _discord_cliente(cfg: Config) -> DiscordClient | None:
+    """`None` sem `DISCORD_TOKEN` — o radar continua funcionando só como monitor,
+    exatamente como antes da Fase 4."""
+    return DiscordClient(f"Bot {cfg.discord_token}") if cfg.discord_token else None
 
 
 # ------------------------------------------------------------------------ feed
@@ -247,26 +255,45 @@ def cmd_ciclo(args) -> int:
     O preflight prova que `.state` aceita escrita *antes* de qualquer POST — sem ele,
     um `.state` read-only deixa o sistema postar com sucesso e falhar ao marcar, a cada
     15 minutos, para sempre.
+
+    O cadastro (Fase 4, `ytr.cadastro`) roda **antes** do "nenhum canal ativo": é o
+    próprio cadastro que pode cadastrar o primeiro canal deste ciclo.
     """
     cfg = _cfg()
     canais = Canais(_caminho_canais())
-    if not canais.ativos():
-        print(f"nenhum canal ativo em {_caminho_canais()} — nada a fazer.")
-        return 0
 
     preflight(cfg.state_dir)
 
     with mod_trava.travar(cfg.state_dir):
         estado = Estado(cfg.state_dir)
         cliente = Cliente()
-        relatorio = rodar(cfg, canais, estado, cliente, publicador=None, seco=args.seco)
+        discord = _discord_cliente(cfg)
+
+        relatorio_cadastro = mod_cadastro.processar(
+            cfg, canais, estado, cliente, discord, seco=args.seco
+        )
+        for linha in relatorio_cadastro.linhas:
+            print(linha)
+        for erro in relatorio_cadastro.erros:
+            print(f"⛔ {erro}", file=sys.stderr)
+
+        if not canais.ativos():
+            print(f"nenhum canal ativo em {_caminho_canais()} — nada a fazer.")
+            return 0
+
+        publicador = (
+            PublicadorDiscord(discord, cfg.canal_aviso)
+            if discord is not None and cfg.canal_aviso
+            else None
+        )
+        relatorio = rodar(cfg, canais, estado, cliente, publicador=publicador, seco=args.seco)
 
     for linha in relatorio.linhas:
         print(linha)
     for erro in relatorio.erros:
         print(f"⛔ {erro}", file=sys.stderr)
     print(relatorio.resumo())
-    return 1 if relatorio.erros else 0
+    return 1 if (relatorio.erros or relatorio_cadastro.erros) else 0
 
 
 # ---------------------------------------------------------------------- perfil

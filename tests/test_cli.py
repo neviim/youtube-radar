@@ -22,6 +22,8 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from ytr import __main__ as cli
+from ytr import cadastro as mod_cadastro
+from ytr import config as mod_config
 from ytr import rede as mod_rede
 from ytr.canal import Canais, ChannelId
 from ytr.rede import RedeError, Resposta
@@ -59,10 +61,22 @@ class Base(unittest.TestCase):
         # na sessão venceria o padrão e o teste passaria a medir a máquina, não o código.
         for chave in [c for c in os.environ if c.startswith("YTR_")]:
             del os.environ[chave]
+        # DISCORD_TOKEN e OBSIDIAN_VAULT não começam com `YTR_`, então o laço acima não
+        # os pega — e sem isto eles sobreviveriam do shell de quem roda a suíte.
+        os.environ.pop("DISCORD_TOKEN", None)
+        os.environ.pop("OBSIDIAN_VAULT", None)
         os.environ["YTR_STATE_DIR"] = str(self.state)
         os.environ["YTR_CANAIS"] = str(self.canais_yaml)
 
+        # `_cfg()` chama `load_dotenv()` sem caminho, que lê `.env` do diretório atual —
+        # e o `.env` de verdade deste repo, uma vez preenchido para uso real, teria
+        # exatamente as variáveis que estes testes afirmam estar ausentes. Neutralizado
+        # aqui, mesmo padrão do `discord-link-brain` (`ComandoCase.setUp`, tests/test_cli.py).
+        self._load_dotenv = mod_config.load_dotenv
+        mod_config.load_dotenv = lambda *a, **k: None
+
     def tearDown(self):
+        mod_config.load_dotenv = self._load_dotenv
         os.environ.clear()
         os.environ.update(self.ambiente)
         self.tmp.cleanup()
@@ -250,6 +264,53 @@ class TestCiclo(Base):
         codigo, saida, _ = rodar_cli(["ciclo", "--seco"])
         self.assertEqual(0, codigo)
         self.assertIn("nada a fazer", saida)
+
+    def test_sem_discord_token_o_cliente_e_none_e_o_cadastro_e_pulado(self):
+        chamadas = []
+        original = mod_cadastro.processar
+
+        def fake(cfg, canais, estado, cliente, discord, seco=False):
+            chamadas.append(discord)
+            return original(cfg, canais, estado, cliente, discord, seco=seco)
+
+        mod_cadastro.processar = fake
+        try:
+            codigo, saida, _ = rodar_cli(["ciclo", "--seco"])
+        finally:
+            mod_cadastro.processar = original
+        self.assertEqual(0, codigo)
+        self.assertEqual([None], chamadas, "sem DISCORD_TOKEN, `_discord_cliente` devolve None")
+
+    def test_cadastro_roda_mesmo_sem_canal_ativo(self):
+        """O cadastro pode registrar o primeiro canal deste ciclo: não pode esperar por
+        um que já exista — é por isso que ele corre antes do "nenhum canal ativo"."""
+        chamadas = []
+        original = mod_cadastro.processar
+        mod_cadastro.processar = lambda *a, **k: (chamadas.append(True), mod_cadastro.RelatorioDeCadastro())[1]
+        try:
+            codigo, saida, _ = rodar_cli(["ciclo", "--seco"])
+        finally:
+            mod_cadastro.processar = original
+        self.assertEqual([True], chamadas)
+        self.assertEqual(0, codigo)
+        self.assertIn("nada a fazer", saida)
+
+    def test_linhas_e_erros_do_cadastro_aparecem_na_saida_do_ciclo(self):
+        self.com_canal()
+        self._fingir_rede()
+        relatorio_falso = mod_cadastro.RelatorioDeCadastro(
+            linhas=["📡 cadastrado pelo Discord: @novo (Canal Novo)"],
+            erros=["cadastro: não consegui ler 111: 403"],
+        )
+        original = mod_cadastro.processar
+        mod_cadastro.processar = lambda *a, **k: relatorio_falso
+        try:
+            codigo, saida, erro = rodar_cli(["ciclo", "--seco"])
+        finally:
+            mod_cadastro.processar = original
+        self.assertIn("cadastrado pelo Discord", saida)
+        self.assertIn("não consegui ler 111", erro)
+        self.assertEqual(1, codigo, "erro do cadastro também faz o ciclo sair 1")
 
     def test_o_primeiro_ciclo_semeia_quinze_e_avisa_zero(self):
         """Critério de pronto da Fase 3, primeira metade."""

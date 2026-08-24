@@ -28,6 +28,7 @@ from datetime import datetime, timedelta, timezone
 from . import ledger, texto
 from .canal import Canal, Canais
 from .config import Config
+from .discord_client import DiscordClient
 from .feed import Feed, FeedInvalido, Video, parse, proxima_em
 from .rede import Cliente, RedeError
 from .state import Estado, EstadoCanal, Saude, agora_utc
@@ -35,6 +36,20 @@ from .state import Estado, EstadoCanal, Saude, agora_utc
 # Recuo por falha, em segundos: 15 → 30 → 60 → 120 min, teto 6 h. Falha de um canal
 # **nunca** posta mensagem — canal morto viraria spam eterno. Aparece no `doctor`.
 RECUO_POR_FALHA = (900, 1800, 3600, 7200, 21600)
+
+
+class PublicadorDiscord:
+    """O `publicador` de produção: Discord real por trás do contrato que `_publicar`
+    exige — só `.publicar(mensagem) -> message_id`. Em teste, o dublê é qualquer objeto
+    com o mesmo método; `rodar()` não sabe a diferença (ver docstring de `rodar`)."""
+
+    def __init__(self, discord: DiscordClient, canal_aviso: str):
+        self._discord = discord
+        self._canal = canal_aviso
+
+    def publicar(self, mensagem: str) -> str:
+        resposta = self._discord.post_message(self._canal, mensagem)
+        return str(resposta.get("id", ""))
 
 
 @dataclass
