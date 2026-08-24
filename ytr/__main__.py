@@ -390,6 +390,19 @@ def cmd_digest(args) -> int:
             for linha in mod_pool.capturar_feedback(cfg, discord):
                 print(linha)
 
+            # Um por dia, e idempotente: sem este guarda, rodar `digest` duas vezes no
+            # mesmo dia posta tudo de novo (segunda leva de mensagens) e **reescreve** o
+            # digest já salvo — perdendo justamente os `message_id` que a captura de
+            # feedback de amanhã precisaria ler. `--seco` ignora isto de propósito: é
+            # avaliação, nunca persiste.
+            hoje_existente = mod_ledger.carregar_digest(cfg.state_dir, datetime.now(timezone.utc).date().isoformat())
+            if hoje_existente is not None:
+                print(
+                    f"digest de hoje já existe ({len(hoje_existente.enviados)} enviado(s), "
+                    f"{hoje_existente.gerado_em}) — não gero de novo. Use --seco para avaliar."
+                )
+                return 0
+
         mapa_canal, _ = _mapa_canal(cfg)
         perfil = mod_gosto.carregar(cfg, sinais=mod_ledger.sinais(cfg.state_dir), mapa_canal=mapa_canal)
 

@@ -434,6 +434,23 @@ class TestDigest(Base):
         self.assertIsNotNone(digest)
         self.assertEqual(1, len(digest.enviados))
 
+    def test_rodar_de_novo_no_mesmo_dia_nao_regenera_nem_perde_message_id(self):
+        """Sem este guarda, a segunda chamada do dia reescreveria o digest sem os
+        `message_id` que a captura de feedback de amanhã precisa ler."""
+        from ytr import ledger as mod_ledger
+        from datetime import datetime, timezone
+
+        hoje = datetime.now(timezone.utc).date().isoformat()
+        item = mod_ledger.ItemDeDigest(video_id="v1", decisao="enviado", message_id="777")
+        mod_ledger.salvar_digest(self.state, mod_ledger.Digest(data=hoje, itens=[item]))
+
+        codigo, saida, _ = rodar_cli(["digest"])
+
+        self.assertEqual(0, codigo)
+        self.assertIn("já existe", saida)
+        digest_relido = mod_ledger.carregar_digest(self.state, hoje)
+        self.assertEqual("777", digest_relido.enviados[0].message_id, "não foi sobrescrito")
+
 
 class TestSinais(Base):
     def test_sem_sinal_diz_onde_procurou(self):
