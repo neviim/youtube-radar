@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import json
 import os
+import threading
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
@@ -184,9 +185,28 @@ def preflight(diretorio: Path) -> None:
     postar com sucesso e falhar ao marcar, indefinidamente — que é exatamente o cenário
     que a barreira de `Saude.postagem_bloqueada` cobre depois, e que este preflight
     evita de acontecer uma primeira vez.
+
+    **A sonda é única por chamada, e isso não é enfeite.** O `preflight` corre de
+    propósito *antes* da trava — a escrita tem de estar provada antes de qualquer POST,
+    e a trava não é o que garante isso. Mas com um nome fixo (`.sonda`) duas execuções
+    simultâneas destroem a sonda uma da outra: o `os.replace` da segunda acha que
+    `.sonda.tmp` não existe mais, porque a primeira já o consumiu.
+
+    O efeito medido, com dois `python3 -m ytr ciclo` de verdade em paralelo: o perdedor
+    saía **2** dizendo "não consigo escrever em .state", quando `.state` estava
+    perfeitamente gravável e o problema real era outro processo rodando. Diagnóstico que
+    aponta a causa errada é pior que diagnóstico nenhum — quem lesse aquilo iria conferir
+    permissão de diretório e não acharia nada. Com a sonda separada, o perdedor chega até
+    a trava e sai **3** nomeando o detentor, que é o que de fato aconteceu.
+
+    O nome leva **pid e thread**, não só o pid: a primeira correção usou apenas
+    `os.getpid()` e um teste de quatro threads no mesmo diretório continuou vermelho,
+    porque thread irmã compartilha o pid. Nada neste projeto chama `preflight` de duas
+    threads hoje — mas a correção que cobre só o caso medido é a que volta a quebrar na
+    próxima vez que alguém mover a chamada.
     """
     diretorio = Path(diretorio)
-    sonda = diretorio / ".sonda"
+    sonda = diretorio / f".sonda.{os.getpid()}.{threading.get_ident()}"
     marca = agora_utc()
     try:
         escrever_atomico(sonda, marca)

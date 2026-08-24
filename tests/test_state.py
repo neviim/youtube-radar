@@ -195,6 +195,58 @@ class TestPreflight(Base):
         preflight(self.dir)
         preflight(self.dir)  # idempotente
 
+    def test_a_sonda_e_unica_por_processo_e_por_thread(self):
+        """Regressão de uma corrida medida com dois ciclos de verdade em paralelo.
+
+        Com o nome fixo `.sonda`, o `os.replace` do segundo processo falhava porque o
+        primeiro já havia consumido `.sonda.tmp` — e o perdedor saía **2** dizendo
+        "não consigo escrever em .state" com o diretório perfeitamente gravável.
+
+        O nome carrega pid **e** thread: a primeira correção levava só o pid, e o teste
+        de concorrência abaixo continuou vermelho porque thread irmã compartilha o pid.
+        """
+        import threading as _t
+        vistas = []
+        original = escrever_atomico
+
+        import ytr.state as mod_state
+        def espiar(destino, texto):
+            vistas.append(Path(destino).name)
+            return original(destino, texto)
+        mod_state.escrever_atomico = espiar
+        try:
+            preflight(self.dir)
+        finally:
+            mod_state.escrever_atomico = original
+
+        self.assertEqual(1, len(vistas))
+        self.assertEqual(f".sonda.{os.getpid()}.{_t.get_ident()}", vistas[0])
+        self.assertNotEqual(".sonda", vistas[0], "nome fixo faz duas sondas colidirem")
+
+    def test_preflight_concorrente_no_mesmo_diretorio_nao_se_atropela(self):
+        """Dois preflights em paralelo, no mesmo `.state`, têm de passar os dois.
+
+        É o cenário exato do critério de pronto da Fase 3: dois `ytr ciclo`
+        simultâneos. O `preflight` corre **antes** da trava de propósito, então ele não
+        pode depender dela para não colidir consigo mesmo.
+        """
+        import threading
+        erros = []
+
+        def rodar():
+            try:
+                for _ in range(20):
+                    preflight(self.dir)
+            except Exception as erro:  # noqa: BLE001 — qualquer falha aqui é o defeito
+                erros.append(erro)
+
+        fios = [threading.Thread(target=rodar) for _ in range(4)]
+        for fio in fios:
+            fio.start()
+        for fio in fios:
+            fio.join()
+        self.assertEqual([], erros, f"preflight concorrente falhou: {erros}")
+
     @unittest.skipIf(os.geteuid() == 0, "root escreve em diretório sem permissão")
     def test_diretorio_sem_permissao_levanta_com_a_razao(self):
         alvo = self.dir / "trancado"
