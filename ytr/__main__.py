@@ -32,6 +32,7 @@ import argparse
 import json
 import os
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 from . import cadastro as mod_cadastro
@@ -40,11 +41,13 @@ from . import config as mod_config
 from . import feed as mod_feed
 from . import gosto as mod_gosto
 from . import ledger as mod_ledger
+from . import pool as mod_pool
+from . import texto as mod_texto
 from . import trava as mod_trava
 from .canal import Canais, CanalError, classificar, handle_por_oembed, resolver
 from .ciclo import PostagemBloqueada, PublicadorDiscord, rodar
 from .config import Config, ConfigError
-from .discord_client import DiscordClient
+from .discord_client import DiscordClient, DiscordError
 from .rede import Cliente
 from .state import Estado, EstadoNaoGravavel, Saude, preflight
 from .trava import TravaOcupada
@@ -367,6 +370,94 @@ def cmd_perfil(args) -> int:
     return 0
 
 
+# ----------------------------------------------------------------------- digest
+
+
+def cmd_digest(args) -> int:
+    """O digest diário: recomenda do Pool 1 (`ytr.pool`) e relê o feedback dos anteriores.
+
+    Mesma garantia do `ciclo`: `preflight` antes da trava, porque salvar o
+    `message_id` de cada item postado depois de ele saber não pode falhar em silêncio.
+    """
+    cfg = _cfg()
+    cliente = Cliente()
+    discord = _discord_cliente(cfg)
+
+    preflight(cfg.state_dir)
+
+    with mod_trava.travar(cfg.state_dir):
+        if not args.seco:
+            for linha in mod_pool.capturar_feedback(cfg, discord):
+                print(linha)
+
+        mapa_canal, _ = _mapa_canal(cfg)
+        perfil = mod_gosto.carregar(cfg, sinais=mod_ledger.sinais(cfg.state_dir), mapa_canal=mapa_canal)
+
+        # O cache de `handle -> channel_id` é gravado mesmo em `--seco`: sem isso, todo
+        # ensaio pagaria de novo o custo de resolução de página (~1,5 MB por canal —
+        # medido; a "150 KB" do plano estava errada) para os canais do pool inteiro,
+        # e o critério de banda do digest nunca convergiria. É cache, não decisão —
+        # a mesma postura de `perfil --resolver`, que também não tem `--seco`.
+        mapa_pool = mod_pool.ler_mapa_pool(cfg.state_dir)
+        mapa_pool = mod_pool.resolver_pool(perfil, cliente, mapa_pool)
+        mod_pool.salvar_mapa_pool(cfg.state_dir, mapa_pool)
+
+        pool = mod_pool.buscar_pool(cfg, mapa_pool, cliente)
+        candidatos = mod_pool.montar_candidatos(cfg, perfil, pool)
+        candidatos = mod_pool.selecionar(cfg, candidatos, cliente)
+        video_por_id = {c.video.video_id: c.video for c in candidatos}
+
+        hoje = datetime.now(timezone.utc).date().isoformat()
+        itens = [
+            mod_ledger.ItemDeDigest(
+                video_id=c.video.video_id, channel_id=c.video.channel_id, titulo=c.video.titulo,
+                url=c.video.url, canal=c.handle, score=round(c.score, 3), componentes=c.componentes,
+                razao=c.razao, liveness=c.liveness, decisao=c.decisao,
+            )
+            for c in candidatos
+        ]
+        digest = mod_ledger.Digest(data=hoje, itens=itens, bytes_gastos=cliente.bytes_gastos)
+
+        enviados = digest.enviados
+        if not enviados:
+            print("nenhum candidato vivo o bastante para recomendar hoje.")
+        for item in enviados:
+            print(f"🎯 {item.titulo} — {item.razao}  ({item.canal})")
+        print(
+            f"\n{len(enviados)} recomendado(s) · {len(itens)} avaliado(s) · "
+            f"{digest.bytes_gastos} bytes"
+        )
+        mortos = sum(1 for i in itens if i.liveness == "morto")
+        if mortos:
+            print(f"{mortos} link(s) morto(s) descartado(s) pelo oEmbed.", file=sys.stderr)
+
+        if args.seco:
+            return 0
+
+        if discord is not None and cfg.canal_aviso and cfg.post_enabled and enviados:
+            try:
+                resposta = discord.post_message(
+                    cfg.canal_aviso,
+                    mod_texto.cabecalho_de_digest(len(enviados), narracao="", com_modelo=False),
+                )
+                digest.cabecalho_message_id = str(resposta.get("id", ""))
+            except DiscordError as erro:
+                print(f"⛔ não consegui postar o cabeçalho do digest: {erro}", file=sys.stderr)
+            for item in enviados:
+                video = video_por_id.get(item.video_id)
+                try:
+                    resposta = discord.post_message(
+                        cfg.canal_aviso, mod_texto.item_de_digest(video, item.razao)
+                    )
+                    item.message_id = str(resposta.get("id", ""))
+                except DiscordError as erro:
+                    print(f"⛔ não consegui postar {item.video_id}: {erro}", file=sys.stderr)
+
+        mod_ledger.salvar_digest(cfg.state_dir, digest)
+
+    return 0
+
+
 # ---------------------------------------------------------------------- sinais
 
 
@@ -515,6 +606,7 @@ def construir_parser() -> argparse.ArgumentParser:
             "  python3 -m ytr canais desativar @algumcanal\n"
             "  python3 -m ytr ciclo --seco\n"
             "  python3 -m ytr perfil --resolver\n"
+            "  python3 -m ytr digest --seco\n"
             "  python3 -m ytr sinais\n"
             "  python3 -m ytr doctor\n"
         ),
@@ -549,6 +641,10 @@ def construir_parser() -> argparse.ArgumentParser:
     pe.add_argument("--resolver", action="store_true",
                     help="resolve as URLs do vault por oEmbed e guarda o mapa")
     pe.set_defaults(func=cmd_perfil)
+
+    di = subs.add_parser("digest", help="recomendação diária do pool + captura de feedback")
+    di.add_argument("--seco", action="store_true", help="não posta nem persiste: só avalia e imprime")
+    di.set_defaults(func=cmd_digest)
 
     si = subs.add_parser("sinais", help="os 👍/👎 capturados, por vídeo")
     si.add_argument("--ultimos", type=int, default=20, metavar="N")

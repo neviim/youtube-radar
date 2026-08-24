@@ -101,7 +101,7 @@ class TestSemArgumento(Base):
 
     def test_a_ajuda_lista_os_subcomandos_com_exemplo(self):
         _, saida, _ = rodar_cli([])
-        for comando in ("feed", "resolver", "canais", "ciclo", "perfil", "sinais", "doctor"):
+        for comando in ("feed", "resolver", "canais", "ciclo", "perfil", "digest", "sinais", "doctor"):
             self.assertIn(comando, saida)
         self.assertIn("exemplos:", saida)
 
@@ -380,6 +380,59 @@ class TestCiclo(Base):
         self.assertEqual(1, codigo)
         self.assertIn("500", erro)
         self.assertIn("@canal", erro)
+
+
+class TestDigest(Base):
+    def test_seco_sem_pool_nao_falha(self):
+        """Sem vault e sem canal do pool resolvido, o digest degrada — não quebra."""
+        codigo, saida, _ = rodar_cli(["digest", "--seco"])
+        self.assertEqual(0, codigo)
+        self.assertIn("nenhum candidato", saida)
+
+    def test_imprime_a_razao_de_cada_recomendado_e_nao_persiste_em_seco(self):
+        from ytr import pool as mod_pool
+        from ytr.feed import Video
+
+        candidato = mod_pool.Candidato(
+            video=Video(video_id="v1", titulo="Vídeo Teste", url="https://youtu.be/v1"),
+            handle="canalteste", componentes={"canal": 5.0}, score=5.0,
+            liveness="vivo", decisao="enviado", razao="canal que você já acompanha",
+        )
+        original = mod_pool.selecionar
+        mod_pool.selecionar = lambda cfg, candidatos, cliente: [candidato]
+        try:
+            codigo, saida, _ = rodar_cli(["digest", "--seco"])
+        finally:
+            mod_pool.selecionar = original
+
+        self.assertEqual(0, codigo)
+        self.assertIn("Vídeo Teste", saida)
+        self.assertIn("canal que você já acompanha", saida)
+        self.assertFalse((self.state / "digests").exists(), "--seco não persiste o digest")
+
+    def test_sem_seco_persiste_o_digest_avaliado(self):
+        from ytr import pool as mod_pool
+        from ytr.feed import Video
+
+        candidato = mod_pool.Candidato(
+            video=Video(video_id="v1", titulo="Vídeo Teste", url="https://youtu.be/v1"),
+            handle="canalteste", componentes={"canal": 5.0}, score=5.0,
+            liveness="vivo", decisao="enviado", razao="canal que você já acompanha",
+        )
+        original = mod_pool.selecionar
+        mod_pool.selecionar = lambda cfg, candidatos, cliente: [candidato]
+        try:
+            codigo, _, _ = rodar_cli(["digest"])
+        finally:
+            mod_pool.selecionar = original
+
+        self.assertEqual(0, codigo)
+        from ytr import ledger as mod_ledger
+        from datetime import datetime, timezone
+        hoje = datetime.now(timezone.utc).date().isoformat()
+        digest = mod_ledger.carregar_digest(self.state, hoje)
+        self.assertIsNotNone(digest)
+        self.assertEqual(1, len(digest.enviados))
 
 
 class TestSinais(Base):

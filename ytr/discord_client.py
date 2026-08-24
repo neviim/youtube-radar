@@ -248,6 +248,22 @@ class DiscordClient:
                 return
 
 
+# ---------------------------------------------------------------------------
+# ADIÇÃO LOCAL — não vendorada. O discord-link-brain não precisa disto: ele só
+# confere a própria reação (`ja_marcada`). A Fase 7 do youtube-radar precisa saber
+# QUEM reagiu num item de digest, para gravar o sinal por usuário em `sinais.jsonl`
+# — e não existe isso no arquivo de origem. Se um dia isto for útil lá também, é
+# candidato a subir para o arquivo de origem antes de divergir feature por feature.
+# ---------------------------------------------------------------------------
+def _reacted_users(self: DiscordClient, channel_id: str, message_id: str, emoji: str) -> list[dict]:
+    caminho = f"/channels/{channel_id}/messages/{message_id}/reactions/{quote(emoji, safe='')}"
+    dados = self._get(caminho, {"limit": 100})
+    return dados if isinstance(dados, list) else []
+
+
+DiscordClient.reacted_users = _reacted_users
+
+
 def partir_para_discord(texto: str, limite: int = 1900) -> list[str]:
     """Quebra o texto em pedaços que caibam numa mensagem do Discord.
 
