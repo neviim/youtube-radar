@@ -41,6 +41,7 @@ from .config import Config
 from .discord_client import DiscordClient, DiscordError
 from .feed import Video
 from .gosto import Perfil
+from .lexico import normalizar
 from .rede import Cliente
 from .state import EstadoCanal, escrever_atomico
 
@@ -55,6 +56,42 @@ _PESO_DESCRICAO_LEXICO = 1.0
 # corpus inteiro do perfil para os 15 × 60 candidatos seria trabalho jogado fora para
 # os 12 mais antigos, que quase nunca vencem os recentes no componente de recência.
 CANDIDATOS_POR_CANAL = 3
+
+# ------------------------------------------------------------ curadoria de conteúdo
+#
+# Pedido explícito do Dotcom (2026-08-24, depois de ver o primeiro digest real): nada
+# que pareça proposta de venda; prioridade para entrevista, laboratório e teste
+# avançado — "informação séria", não superficial. Lista **declarada, não medida** —
+# revisável a qualquer momento, é só editar as duas tuplas abaixo.
+#
+# Exclusão é dura (o vídeo nunca aparece), não um desconto na pontuação: "não quero
+# nada disso" é diferente de "gosto menos disso". O bônus de conteúdo sério, ao
+# contrário, é um multiplicador sobre a pontuação já somada — e não mais um componente
+# somado direto, porque o componente léxico já pontua na casa dos milhares (medido: a
+# afinidade de canal fica na casa de 5-10) e um bônus somado nessa escala seria
+# irrelevante perto dele. Multiplicar afeta o ranking na mesma proporção sempre,
+# independente da escala de quem entrou.
+TERMOS_MARKETING = (
+    "assine", "assinatura", "inscreva-se", "oferta", "promoção", "promocional",
+    "desconto", "cupom", "compre agora", "patrocinado", "publicidade",
+    "link na descrição", "clique aqui", "não perca", "última chance",
+    "subscribe", "sponsored", "discount code", "coupon", "buy now", "affiliate",
+    "sign up now", "limited time",
+)
+
+TERMOS_CONTEUDO_SERIO = (
+    "entrevista", "laboratório", "teste avançado", "análise profunda",
+    "estudo de caso", "documentário", "por dentro", "explicação técnica",
+    "interview", "lab test", "deep dive", "case study", "in-depth",
+    "documentary", "technical review",
+)
+
+_BONUS_CONTEUDO_SERIO = 1.5
+
+
+def _contem_termo(texto: str, termos: tuple[str, ...]) -> bool:
+    alvo = normalizar(texto or "")
+    return any(normalizar(termo) in alvo for termo in termos)
 
 
 def _caminho_mapa_pool(state_dir) -> Path:
@@ -85,7 +122,8 @@ def resolver_pool(perfil: Perfil, cliente: Cliente, mapa: dict) -> dict:
     """`handle -> channel_id`, resolvido uma vez na vida de cada canal do pool.
 
     Reaproveita `canal.resolver`: a chamada que confirma o id já busca o feed para
-    validar — o custo de ~150 KB só é pago na primeira vez que um handle aparece.
+    validar — o custo (~1,5 MB por canal, medido; o plano dizia 150 KB e estava
+    errado) só é pago na primeira vez que um handle aparece.
     """
     for handle in perfil.canais_do_pool:
         chave = handle.lstrip("@").casefold()
@@ -174,9 +212,18 @@ def montar_candidatos(cfg: Config, perfil: Perfil, pool: list[tuple[str, list[Vi
 
             componentes = {**afinidade, "lexico": round(lexico, 3),
                            "engajamento": round(engajamento, 3), "recencia": round(recencia, 3)}
+            score = sum(componentes.values())
+
+            texto_do_video = f"{video.titulo} {video.descricao}"
+            decisao = "cortado_por_score"
+            if _contem_termo(texto_do_video, TERMOS_MARKETING):
+                decisao = "cortado_por_marketing"
+            elif _contem_termo(texto_do_video, TERMOS_CONTEUDO_SERIO):
+                score *= _BONUS_CONTEUDO_SERIO
+
             candidato = Candidato(
                 video=video, handle=handle, componentes=componentes,
-                score=sum(componentes.values()), razao=_razao(componentes),
+                score=round(score, 3), razao=_razao(componentes), decisao=decisao,
             )
             saida.append(candidato)
 
@@ -193,6 +240,11 @@ def selecionar(cfg: Config, candidatos: list[Candidato], cliente: Cliente) -> li
     enviados = 0
 
     for candidato in candidatos:
+        if candidato.decisao == "cortado_por_marketing":
+            # Já decidido em `montar_candidatos` — exclusão dura, não concorre por
+            # vaga e não é liveness-checado (não vale gastar oEmbed em quem nunca
+            # seria enviado de qualquer jeito).
+            continue
         if enviados >= cfg.digest_itens:
             candidato.decisao = "cortado_por_teto"
             continue

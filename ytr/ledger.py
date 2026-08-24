@@ -36,6 +36,7 @@ DECISOES = (
     "cortado_por_liveness",
     "cortado_por_canal",
     "cortado_por_score",
+    "cortado_por_marketing",
 )
 
 

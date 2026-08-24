@@ -64,57 +64,45 @@ def resumo(video: Video) -> tuple[str, str]:
     return "", "so_titulo"
 
 
-def _engajamento(video: Video) -> str:
-    partes = []
-    if video.views:
-        partes.append(f"{video.views:,} views".replace(",", "."))
-    if video.rating_n:
-        partes.append(f"★{video.rating_media:.1f} ({video.rating_n})")
-    return " · ".join(partes)
+def _frase(video: Video) -> str:
+    """Título, canal e um contexto de **uma frase só** — nunca sem a procedência.
+
+    Pedido do Dotcom (2026-08-24): mensagem simples, uma frase no máximo, e nada que
+    pareça proposta de venda (isso é filtro de conteúdo, em `ytr.pool`, não aqui — este
+    módulo só formata o que já foi aprovado). A invariante de honestidade continua:
+    se o feed não trouxe descrição, a frase diz isso em vez de inventar contexto a
+    partir do título.
+    """
+    texto, procedencia = resumo(video)
+    if procedencia == "descricao":
+        contexto = texto.split(". ", 1)[0].rstrip()
+        if not contexto.endswith((".", "…", "!", "?")):
+            contexto += "."
+    else:
+        contexto = "sem descrição no feed — não li o conteúdo, só o título."
+    return f"**{video.titulo}** _({video.canal})_ — {contexto}"
 
 
 def aviso(video: Video) -> str:
-    """A mensagem de um vídeo novo num canal monitorado.
+    """A mensagem de um vídeo novo num canal monitorado: uma frase e o link.
 
-    O `video_id` aparece no texto de propósito: é o que permite, depois de um timeout
-    ambíguo (o Discord aceitou o POST e o cliente não soube), procurar a mensagem nas
-    últimas do canal antes de repostar. Sem ele, a recuperação teria de comparar
-    títulos.
-
-    A URL vai entre `<>` para suprimir a prévia. Um cartão seria útil, mas *Embed
-    Links* não está no inteiro de permissões que o bot já tem, e trocar permissão por
-    estética não paga.
+    O link vai solto, sem `<>`: com a permissão *Embed Links* que o bot passou a ter,
+    o Discord mostra o card de prévia — link "de verdade", fácil de reconhecer e
+    repostar, era o próprio pedido. `video_id` não precisa de linha própria: já está
+    dentro da URL (`?v=<id>`), então a recuperação depois de um POST ambíguo (buscar a
+    mensagem nas últimas do canal) ainda encontra por substring.
     """
-    texto, procedencia = resumo(video)
-    linhas = [f"📡 **{video.titulo}**", f"_{video.canal}_"]
-
-    if procedencia == "descricao":
-        linhas += ["", texto, "", "_(resumo: a descrição escrita pelo canal)_"]
-    else:
-        linhas += ["", "_(sem descrição no feed — só o título; não li o conteúdo.)_"]
-
-    engajamento = _engajamento(video)
-    if engajamento:
-        linhas.append(f"_{engajamento}_")
-
-    linhas += ["", f"<{video.url}>", f"`{video.video_id}`"]
-    return "\n".join(linhas)
+    return f"🎬 {_frase(video)} {video.url}"
 
 
 def item_de_digest(video: Video, razao: str) -> str:
-    """Uma recomendação, como **mensagem própria**.
+    """Uma recomendação, como **mensagem própria** — mesma frase única do aviso, mais o
+    porquê e o par de reações que fecha o laço de aprendizado (Fase 7).
 
-    Mensagem por candidato, e não um digest único com 5 vídeos, porque a reação tem de
-    ser inequívoca: um 👍 numa mensagem que contém cinco vídeos não diz qual agradou.
-    Com uma mensagem por item, o 👍 mapeia para um `video_id` sem o Dotcom ter de
-    decorar reação numerada e sem o bot pré-semear cinco emojis por digest.
+    Mensagem por candidato, e não um digest único com vários vídeos, porque a reação
+    tem de ser inequívoca: um 👍 numa mensagem com cinco vídeos não diz qual agradou.
     """
-    linhas = [f"🎯 **{video.titulo}**", f"_{video.canal}_", "", f"_por quê:_ {razao}"]
-    texto, procedencia = resumo(video)
-    if procedencia == "descricao":
-        linhas += ["", truncar(texto, 220)]
-    linhas += ["", f"<{video.url}>", f"`{video.video_id}`", "", "👍 / 👎"]
-    return "\n".join(linhas)
+    return f"🎯 {_frase(video)} _{razao}._ {video.url}\n👍 / 👎"
 
 
 def cabecalho_de_digest(quantos: int, narracao: str, com_modelo: bool) -> str:

@@ -123,9 +123,16 @@ class TestProcedencia(unittest.TestCase):
 
 
 class TestAviso(unittest.TestCase):
-    def test_com_descricao_a_mensagem_declara_a_procedencia(self):
+    """Fase 7.1 — pedido do Dotcom (2026-08-24): mensagem simplificada, uma frase no
+    máximo, e link solto para o Discord gerar prévia. A invariante de honestidade
+    (nunca dá a entender que assistiu ao vídeo) continua, só que mais compacta: com
+    descrição, a frase **é** a própria descrição do autor (citação, não invenção); sem
+    descrição, uma frase curta diz isso explicitamente.
+    """
+
+    def test_com_descricao_a_mensagem_cita_a_propria_descricao(self):
         mensagem = aviso(video(descricao=LONGA))
-        self.assertIn("a descrição escrita pelo canal", mensagem)
+        self.assertIn("como montar um sistema de monitoração", mensagem)
 
     def test_sem_descricao_a_mensagem_diz_que_nao_leu_o_conteudo(self):
         """O sistema nunca dá a entender que assistiu ao vídeo."""
@@ -133,35 +140,31 @@ class TestAviso(unittest.TestCase):
         self.assertIn("não li o conteúdo", mensagem)
         self.assertIn("só o título", mensagem)
 
-    def test_a_mensagem_traz_titulo_canal_url_e_video_id(self):
+    def test_a_mensagem_traz_titulo_canal_e_url(self):
         mensagem = aviso(video(descricao=LONGA))
         self.assertIn("Um título", mensagem)
         self.assertIn("Canal de Teste", mensagem)
         self.assertIn("https://youtu.be/aaaaaaaaaaa", mensagem)
-        self.assertIn("aaaaaaaaaaa", mensagem)
 
-    def test_o_video_id_aparece_no_texto_de_proposito(self):
-        """É o que permite, depois de um timeout ambíguo (o Discord aceitou o POST e o
-        cliente não soube), procurar a mensagem nas últimas do canal antes de repostar.
-        Sem ele, a recuperação teria de comparar títulos.
+    def test_o_video_id_continua_recuperavel_por_dentro_da_url(self):
+        """Não tem mais linha própria — mas a recuperação depois de um POST ambíguo
+        (buscar a mensagem nas últimas do canal) ainda acha por substring na URL.
         """
-        self.assertIn("`aaaaaaaaaaa`", aviso(video()))
+        self.assertIn("aaaaaaaaaaa", aviso(video()))
 
-    def test_a_url_vai_entre_sinais_de_menor_para_suprimir_a_previa(self):
-        """Um cartão seria útil, mas *Embed Links* não está nas permissões que o bot
-        já tem — e trocar permissão por estética não paga.
+    def test_a_url_vai_solta_para_o_discord_mostrar_a_previa(self):
+        """Pedido do Dotcom: link "de verdade", clicável, com card — não mais suprimido
+        por `<>`. Depende da permissão *Embed Links*, que ele habilitou no bot.
         """
-        self.assertIn("<https://youtu.be/aaaaaaaaaaa>", aviso(video()))
-
-    def test_engajamento_aparece_quando_o_feed_traz(self):
-        mensagem = aviso(video(views=12345, rating_media=4.8, rating_n=106))
-        self.assertIn("12.345 views", mensagem)
-        self.assertIn("★4.8 (106)", mensagem)
-
-    def test_engajamento_ausente_nao_deixa_linha_vazia(self):
         mensagem = aviso(video())
-        self.assertNotIn("★", mensagem)
-        self.assertNotIn("views", mensagem)
+        self.assertIn("https://youtu.be/aaaaaaaaaaa", mensagem)
+        self.assertNotIn("<https://youtu.be/aaaaaaaaaaa>", mensagem)
+
+    def test_e_uma_frase_so(self):
+        """"Uma frase no máximo" — mesmo com descrição de várias frases, só a primeira
+        entra na mensagem."""
+        mensagem = aviso(video(descricao=LONGA))
+        self.assertNotIn("Falo do custo real de banda", mensagem)
 
 
 class TestItemDeDigest(unittest.TestCase):
@@ -170,10 +173,9 @@ class TestItemDeDigest(unittest.TestCase):
         mensagem que contém cinco vídeos não diz qual agradou.
         """
         mensagem = item_de_digest(video(descricao=LONGA), razao="canal que você salvou 5×")
-        self.assertIn("por quê:", mensagem)
         self.assertIn("canal que você salvou 5×", mensagem)
         self.assertIn("👍 / 👎", mensagem)
-        self.assertIn("`aaaaaaaaaaa`", mensagem)
+        self.assertIn("aaaaaaaaaaa", mensagem)
 
     def test_o_emoji_de_reacao_nao_e_marca_do_bot(self):
         """👍/👎 são reação **humana**, não marca que o bot põe.

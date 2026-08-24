@@ -157,6 +157,32 @@ class TestMontarCandidatos(unittest.TestCase):
         ids = {c.video.video_id for c in candidatos}
         self.assertEqual({"v9", "v8", "v7"}, ids)
 
+    def test_conteudo_de_marketing_e_marcado_para_corte_duro(self):
+        """Pedido do Dotcom (2026-08-24): nada que pareça proposta de venda. Exclusão
+        dura — marcado aqui, `selecionar` é quem de fato pula sem gastar liveness."""
+        cfg = self._cfg()
+        perfil = Perfil()
+        pool_dados = [("a", [_video("v1", titulo="Assine agora e ganhe desconto",
+                                     publicado="2026-08-20T00:00:00+00:00")])]
+        candidatos = pool.montar_candidatos(cfg, perfil, pool_dados)
+        self.assertEqual("cortado_por_marketing", candidatos[0].decisao)
+
+    def test_conteudo_serio_pontua_mais_que_equivalente_sem_o_termo(self):
+        cfg = self._cfg()
+        perfil = Perfil()
+        pool_dados = [
+            ("a", [_video("v1", titulo="Entrevista completa sobre o assunto",
+                           canal="c", channel_id="UC1",
+                           publicado="2026-08-20T00:00:00+00:00", views=100)]),
+            ("b", [_video("v2", titulo="Vídeo qualquer sobre o assunto",
+                           canal="c", channel_id="UC1",
+                           publicado="2026-08-20T00:00:00+00:00", views=100)]),
+        ]
+        candidatos = pool.montar_candidatos(cfg, perfil, pool_dados)
+        por_handle = {c.handle: c for c in candidatos}
+        self.assertGreater(por_handle["a"].score, por_handle["b"].score)
+        self.assertNotEqual("cortado_por_marketing", por_handle["a"].decisao)
+
 
 class TestSelecionar(unittest.TestCase):
     def _cfg(self, itens=2, por_canal=1):
@@ -167,6 +193,21 @@ class TestSelecionar(unittest.TestCase):
             pool.Candidato(video=_video(f"v{i}"), handle=h, score=s)
             for i, (h, s) in enumerate(handles_e_scores)
         ]
+
+    def test_cortado_por_marketing_nao_consome_vaga_nem_gasta_liveness(self):
+        chamados = []
+        original = pool.vivo
+        pool.vivo = lambda url, cliente: chamados.append(url) or True
+        try:
+            marketing = pool.Candidato(video=_video("v1"), handle="a", score=99.0,
+                                        decisao="cortado_por_marketing")
+            normal = pool.Candidato(video=_video("v2"), handle="b", score=1.0)
+            saida = pool.selecionar(self._cfg(itens=1), [marketing, normal], cliente=None)
+        finally:
+            pool.vivo = original
+        self.assertEqual("cortado_por_marketing", saida[0].decisao, "não foi tocado")
+        self.assertEqual("enviado", saida[1].decisao, "a vaga não foi ocupada pelo cortado")
+        self.assertNotIn(marketing.video.url, chamados, "liveness não gasto em quem já foi cortado")
 
     def test_respeita_o_teto_do_digest(self):
         original = pool.vivo
