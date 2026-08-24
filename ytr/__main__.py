@@ -41,6 +41,7 @@ from . import config as mod_config
 from . import feed as mod_feed
 from . import gosto as mod_gosto
 from . import ledger as mod_ledger
+from . import modelo as mod_modelo
 from . import pool as mod_pool
 from . import texto as mod_texto
 from . import trava as mod_trava
@@ -430,10 +431,26 @@ def cmd_digest(args) -> int:
             for c in candidatos
         ]
         digest = mod_ledger.Digest(data=hoje, itens=itens, bytes_gastos=cliente.bytes_gastos)
-
         enviados = digest.enviados
+
+        # Fase 8 (D5): opcional, por cima, nunca no caminho crítico. O modelo só vê
+        # título/canal/razão dos itens já aprovados — nunca escolhe, nunca ganha uma
+        # URL. `--seco` nunca chama (é ensaio; chamar gastaria o teto de hoje à toa).
+        narracao = ""
+        if not args.seco and enviados and mod_modelo.disponivel(cfg):
+            try:
+                narracao = mod_modelo.narrar(
+                    cfg, [{"titulo": i.titulo, "canal": i.canal, "razao": i.razao} for i in enviados]
+                )
+                digest.narracao = narracao
+                digest.backend_llm = cfg.llm_backend
+            except mod_modelo.ModeloError as erro:
+                print(f"⛔ modelo falhou, seguindo sem narração: {erro}", file=sys.stderr)
+
         if not enviados:
             print("nenhum candidato vivo o bastante para recomendar hoje.")
+        if narracao:
+            print(f"\n{narracao}\n")
         for item in enviados:
             print(f"🎯 {item.titulo} — {item.razao}  ({item.canal})")
         print(
@@ -451,7 +468,7 @@ def cmd_digest(args) -> int:
             try:
                 resposta = discord.post_message(
                     cfg.canal_aviso,
-                    mod_texto.cabecalho_de_digest(len(enviados), narracao="", com_modelo=False),
+                    mod_texto.cabecalho_de_digest(len(enviados), narracao=narracao, com_modelo=bool(narracao)),
                 )
                 digest.cabecalho_message_id = str(resposta.get("id", ""))
             except DiscordError as erro:
@@ -581,7 +598,11 @@ def cmd_doctor(args) -> int:
     saude = Saude.carregar(cfg.state_dir)
     print(f"heartbeat       {saude.heartbeat or 'nunca'} (tolerância {cfg.health_tolerance}s)")
     print(f"ciclos ruins    {saude.ciclos_com_falha_total} seguidos com falha total")
-    print(f"llm             backend {cfg.llm_backend} · teto {cfg.llm_max_dia}/dia")
+    chamadas_llm_hoje = mod_modelo.chamadas_hoje(cfg.state_dir)
+    print(
+        f"llm             backend {cfg.llm_backend} · chamadas_llm_hoje: {chamadas_llm_hoje} "
+        f"de {cfg.llm_max_dia}/dia"
+    )
 
     if saude.postagem_bloqueada:
         print(f"postagem        BLOQUEADA — {saude.motivo}")

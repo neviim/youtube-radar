@@ -112,6 +112,9 @@ class Config:
     llm_max_dia: int = 1
     resumo_llm: bool = False
     llm_budget_dir: str = ""
+    claude_bin: str = "claude"
+    codex_bin: str = "codex"
+    llm_timeout: float = 60.0
 
     # máquina
     state_dir: Path = field(default_factory=lambda: Path(".state"))
@@ -162,6 +165,9 @@ class Config:
             llm_max_dia=_int("YTR_LLM_MAX_DIA", 1),
             resumo_llm=_bool("YTR_RESUMO_LLM", "0"),
             llm_budget_dir=os.environ.get("LLM_BUDGET_DIR", "").strip(),
+            claude_bin=os.environ.get("CLAUDE_BIN", "claude").strip() or "claude",
+            codex_bin=os.environ.get("CODEX_BIN", "codex").strip() or "codex",
+            llm_timeout=_float("YTR_LLM_TIMEOUT", 60.0),
             state_dir=Path(os.environ.get("YTR_STATE_DIR", "").strip() or ".state"),
             health_tolerance=_int("YTR_HEALTH_TOLERANCE", 3600),
         )

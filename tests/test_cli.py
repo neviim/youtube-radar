@@ -16,6 +16,7 @@ import io
 import os
 import re
 import stat
+import types
 import unittest
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
@@ -450,6 +451,110 @@ class TestDigest(Base):
         self.assertIn("já existe", saida)
         digest_relido = mod_ledger.carregar_digest(self.state, hoje)
         self.assertEqual("777", digest_relido.enviados[0].message_id, "não foi sobrescrito")
+
+    def _digest_com_um_candidato_falso(self, titulo="Vídeo Teste", razao="canal que você já acompanha"):
+        """Injeta um único candidato aprovado, sem tocar rede — para os testes da
+        Fase 8, que não precisam exercitar o pool inteiro de novo."""
+        from ytr import pool as mod_pool
+        from ytr.feed import Video
+
+        candidato = mod_pool.Candidato(
+            video=Video(video_id="v1", titulo=titulo, url="https://youtu.be/v1"),
+            handle="canalteste", componentes={"canal": 5.0}, score=5.0,
+            liveness="vivo", decisao="enviado", razao=razao,
+        )
+        original = mod_pool.selecionar
+        mod_pool.selecionar = lambda cfg, candidatos, cliente: [candidato]
+        return original
+
+    def _fingir_claude(self, resposta_do_modelo):
+        """Dublê de `subprocess.run` para o backend `claude-cli` — devolve o envelope
+        `--output-format json` que `modelo._rodar_claude` espera."""
+        import json as _json
+
+        from ytr import modelo as mod_modelo
+
+        original = mod_modelo.subprocess.run
+        mod_modelo.subprocess.run = lambda cmd, **kw: types.SimpleNamespace(
+            returncode=0, stdout=_json.dumps({"result": resposta_do_modelo}), stderr=""
+        )
+        return original
+
+    def test_llm_backend_none_digest_sai_igual_sem_narracao(self):
+        """Critério de pronto da Fase 8, primeira metade."""
+        from ytr import pool as mod_pool
+        from ytr import modelo as mod_modelo
+
+        original_selecionar = self._digest_com_um_candidato_falso()
+        try:
+            codigo, saida, _ = rodar_cli(["digest"])
+        finally:
+            mod_pool.selecionar = original_selecionar
+
+        self.assertEqual(0, codigo)
+        self.assertIn("Vídeo Teste", saida)
+        self.assertEqual(0, mod_modelo.chamadas_hoje(self.state), "backend none nunca chama")
+
+        from datetime import datetime, timezone
+
+        from ytr import ledger as mod_ledger
+        hoje = datetime.now(timezone.utc).date().isoformat()
+        self.assertEqual("", mod_ledger.carregar_digest(self.state, hoje).narracao)
+
+    def test_com_claude_cli_o_digest_ganha_prosa_e_o_doctor_mostra_a_chamada(self):
+        """Critério de pronto da Fase 8, segunda metade."""
+        from ytr import pool as mod_pool
+        from ytr import modelo as mod_modelo
+
+        os.environ["YTR_LLM_BACKEND"] = "claude-cli"
+        original_selecionar = self._digest_com_um_candidato_falso()
+        original_run = self._fingir_claude("Hoje tem um vídeo sobre o assunto que você gosta.")
+        try:
+            codigo, saida, _ = rodar_cli(["digest"])
+        finally:
+            mod_pool.selecionar = original_selecionar
+            mod_modelo.subprocess.run = original_run
+
+        self.assertEqual(0, codigo)
+        self.assertIn("Hoje tem um vídeo sobre o assunto que você gosta.", saida)
+
+        from datetime import datetime, timezone
+
+        from ytr import ledger as mod_ledger
+        hoje = datetime.now(timezone.utc).date().isoformat()
+        digest = mod_ledger.carregar_digest(self.state, hoje)
+        self.assertEqual("Hoje tem um vídeo sobre o assunto que você gosta.", digest.narracao)
+        self.assertEqual("claude-cli", digest.backend_llm)
+
+        _, saida_doctor, _ = rodar_cli(["doctor"])
+        self.assertIn("chamadas_llm_hoje: 1", saida_doctor)
+
+    def test_o_modelo_nao_pode_acrescentar_video_que_as_regras_nao_escolheram(self):
+        """Critério de pronto da Fase 8, o guarda. A prosa do modelo alcança **só** o
+        cabeçalho — os itens do digest vêm de `pool.selecionar`, nunca do texto livre.
+        """
+        from ytr import pool as mod_pool
+        from ytr import modelo as mod_modelo
+
+        os.environ["YTR_LLM_BACKEND"] = "claude-cli"
+        original_selecionar = self._digest_com_um_candidato_falso(titulo="Vídeo Real")
+        narracao_maliciosa = "Veja também Vídeo Inventado Pelo Modelo, imperdível e novo!"
+        original_run = self._fingir_claude(narracao_maliciosa)
+        try:
+            rodar_cli(["digest"])
+        finally:
+            mod_pool.selecionar = original_selecionar
+            mod_modelo.subprocess.run = original_run
+
+        from datetime import datetime, timezone
+
+        from ytr import ledger as mod_ledger
+        hoje = datetime.now(timezone.utc).date().isoformat()
+        digest = mod_ledger.carregar_digest(self.state, hoje)
+        self.assertEqual(1, len(digest.itens), "o modelo não pode acrescentar item")
+        self.assertEqual("Vídeo Real", digest.itens[0].titulo)
+        self.assertNotIn("Vídeo Inventado", " ".join(i.titulo for i in digest.itens))
+        self.assertEqual(narracao_maliciosa, digest.narracao, "a prosa fica só no cabeçalho")
 
 
 class TestSinais(Base):
