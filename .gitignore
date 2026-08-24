@@ -1,0 +1,17 @@
+# Segredo. O `.env.bak` e o `.env.tmp` são criados pelo próprio código (env_io):
+# ignorar só `.env` deixa os dois derivados rastreáveis, e esse buraco já existiu
+# no projeto irmão.
+.env
+.env.bak
+.env.tmp
+
+# Estado local da máquina: cursor por canal, ledger de digest, sinais, locks.
+.state/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.coverage

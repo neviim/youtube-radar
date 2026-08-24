@@ -1,0 +1,501 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns:yt="http://www.youtube.com/xml/schemas/2015" xmlns:media="http://search.yahoo.com/mrss/" xmlns="http://www.w3.org/2005/Atom">
+ <link rel="self" href="http://www.youtube.com/feeds/videos.xml?channel_id=UC_x5XG1OV2P6uZZ5FSM9Ttw"/>
+ <id>yt:channel:_x5XG1OV2P6uZZ5FSM9Ttw</id>
+ <yt:channelId>_x5XG1OV2P6uZZ5FSM9Ttw</yt:channelId>
+ <title>Google for Developers</title>
+ <link rel="alternate" href="https://www.youtube.com/channel/UC_x5XG1OV2P6uZZ5FSM9Ttw"/>
+ <author>
+  <name>Google for Developers</name>
+  <uri>https://www.youtube.com/channel/UC_x5XG1OV2P6uZZ5FSM9Ttw</uri>
+ </author>
+ <published>2007-08-23T00:34:43+00:00</published>
+ <entry>
+  <id>yt:video:Z8ycfJosB-o</id>
+  <yt:videoId>Z8ycfJosB-o</yt:videoId>
+  <yt:channelId>UC_x5XG1OV2P6uZZ5FSM9Ttw</yt:channelId>
+  <title>Build a live translation broadcast app with the Gemini Live API and LiveKit</title>
+  <link rel="alternate" href="https://www.youtube.com/shorts/Z8ycfJosB-o"/>
+  <author>
+   <name>Google for Developers</name>
+   <uri>https://www.youtube.com/channel/UC_x5XG1OV2P6uZZ5FSM9Ttw</uri>
+  </author>
+  <published>2026-08-18T16:00:07+00:00</published>
+  <updated>2026-08-18T16:15:58+00:00</updated>
+  <media:group>
+   <media:title>Build a live translation broadcast app with the Gemini Live API and LiveKit</media:title>
+   <media:content url="https://www.youtube.com/v/Z8ycfJosB-o?version=3" type="application/x-shockwave-flash" width="640" height="390"/>
+   <media:thumbnail url="https://i3.ytimg.com/vi/Z8ycfJosB-o/hqdefault.jpg" width="480" height="360"/>
+   <media:description>Learn how to build a real-time multilingual broadcast app using Gemini 3.5 Live Translate, LiveKit, and Google Cloud Run. Watch Google DeepMind’s Thor Schaeff walk through the open source demo, from setting up translation sessions and managing WebSocket connections to deploying with Cloud Run and exploring the codebase with Antigravity.
+
+Resources: 
+Find the code →  https://goo.gle/4z9lyPr 
+Dive Into the docs → https://goo.gle/4zgpuOt 
+
+Subscribe to Google for Developers → https://goo.gle/developers  
+
+Products Mentioned:  Google AI, Gemini 
+Speaker: Thor Schaeff</media:description>
+   <media:community>
+    <media:starRating count="106" average="5.00" min="1" max="5"/>
+    <media:statistics views="2287"/>
+   </media:community>
+  </media:group>
+ </entry>
+ <entry>
+  <id>yt:video:kN_iMEAi1dw</id>
+  <yt:videoId>kN_iMEAi1dw</yt:videoId>
+  <yt:channelId>UC_x5XG1OV2P6uZZ5FSM9Ttw</yt:channelId>
+  <title>Build a live translation broadcast app with the Gemini Live API and LiveKit</title>
+  <link rel="alternate" href="https://www.youtube.com/watch?v=kN_iMEAi1dw"/>
+  <author>
+   <name>Google for Developers</name>
+   <uri>https://www.youtube.com/channel/UC_x5XG1OV2P6uZZ5FSM9Ttw</uri>
+  </author>
+  <published>2026-08-17T23:00:36+00:00</published>
+  <updated>2026-08-17T23:16:42+00:00</updated>
+  <media:group>
+   <media:title>Build a live translation broadcast app with the Gemini Live API and LiveKit</media:title>
+   <media:content url="https://www.youtube.com/v/kN_iMEAi1dw?version=3" type="application/x-shockwave-flash" width="640" height="390"/>
+   <media:thumbnail url="https://i4.ytimg.com/vi/kN_iMEAi1dw/hqdefault.jpg" width="480" height="360"/>
+   <media:description>Learn how to build a real-time multilingual broadcast app using Gemini 3.5 Live Translate, LiveKit, and Google Cloud Run. Watch Google DeepMind’s Thor Schaeff walk through the open source demo, from setting up translation sessions and managing WebSocket connections to deploying with Cloud Run and exploring the codebase with Antigravity.
+
+Resources: 
+Find the code →  https://goo.gle/4z9lyPr 
+Dive Into the docs → https://goo.gle/4zgpuOt 
+
+Subscribe to Google for Developers → https://goo.gle/developers  
+
+Products Mentioned:  Google AI, Gemini 
+Speaker: Thor Schaeff</media:description>
+   <media:community>
+    <media:starRating count="136" average="5.00" min="1" max="5"/>
+    <media:statistics views="3192"/>
+   </media:community>
+  </media:group>
+ </entry>
+ <entry>
+  <id>yt:video:kacf2bib-X0</id>
+  <yt:videoId>kacf2bib-X0</yt:videoId>
+  <yt:channelId>UC_x5XG1OV2P6uZZ5FSM9Ttw</yt:channelId>
+  <title>Hands on with Gemini 3.7 Flash</title>
+  <link rel="alternate" href="https://www.youtube.com/watch?v=kacf2bib-X0"/>
+  <author>
+   <name>Google for Developers</name>
+   <uri>https://www.youtube.com/channel/UC_x5XG1OV2P6uZZ5FSM9Ttw</uri>
+  </author>
+  <published>2026-08-17T18:40:25+00:00</published>
+  <updated>2026-08-18T10:11:19+00:00</updated>
+  <media:group>
+   <media:title>Hands on with Gemini 3.7 Flash</media:title>
+   <media:content url="https://www.youtube.com/v/kacf2bib-X0?version=3" type="application/x-shockwave-flash" width="640" height="390"/>
+   <media:thumbnail url="https://i4.ytimg.com/vi/kacf2bib-X0/hqdefault.jpg" width="480" height="360"/>
+   <media:description>Discover how leaders at Box, Databricks, and Emergent are testing and building with Gemini 3.7 Flash, our most intelligent workhorse model yet for coding and agents. In this conversation, we explore how Gemini 3.7 Flash powers highly efficient, scalable multi-agent systems that need  low latency and efficient token use to scale in production. 
+
+Subscribe to Google for Developers → https://goo.gle/developers 
+
+Speakers: Paige Bailey, Matthew Terrell (Box), Madhav Jha (Emergent), Ivan Zhou (Databricks)
+Products Mentioned: Gemini 3.7 Flash</media:description>
+   <media:community>
+    <media:starRating count="500" average="5.00" min="1" max="5"/>
+    <media:statistics views="18741"/>
+   </media:community>
+  </media:group>
+ </entry>
+ <entry>
+  <id>yt:video:sStb4mjP7RY</id>
+  <yt:videoId>sStb4mjP7RY</yt:videoId>
+  <yt:channelId>UC_x5XG1OV2P6uZZ5FSM9Ttw</yt:channelId>
+  <title>What is Gemini 3.7 Flash?</title>
+  <link rel="alternate" href="https://www.youtube.com/shorts/sStb4mjP7RY"/>
+  <author>
+   <name>Google for Developers</name>
+   <uri>https://www.youtube.com/channel/UC_x5XG1OV2P6uZZ5FSM9Ttw</uri>
+  </author>
+  <published>2026-08-13T23:00:16+00:00</published>
+  <updated>2026-08-16T23:34:29+00:00</updated>
+  <media:group>
+   <media:title>What is Gemini 3.7 Flash?</media:title>
+   <media:content url="https://www.youtube.com/v/sStb4mjP7RY?version=3" type="application/x-shockwave-flash" width="640" height="390"/>
+   <media:thumbnail url="https://i4.ytimg.com/vi/sStb4mjP7RY/hqdefault.jpg" width="480" height="360"/>
+   <media:description>Follow along as we use Gemini 3.7 Flash to build an animated sprite-based 90s game in Google Antigravity. We go from a single prompt to a plan, then to a playable game with assets generated by Nano Banana Pro and infinite remixing possibilities. 
+
+Subscribe to Google for Developers → https://goo.gle/developers 
+
+#GoogleDeepMind #GoogleAI 
+
+Speakers: 
+Products Mentioned: Google Antigravity, Gemini</media:description>
+   <media:community>
+    <media:starRating count="307" average="5.00" min="1" max="5"/>
+    <media:statistics views="13290"/>
+   </media:community>
+  </media:group>
+ </entry>
+ <entry>
+  <id>yt:video:9_PtOVH2FPE</id>
+  <yt:videoId>9_PtOVH2FPE</yt:videoId>
+  <yt:channelId>UC_x5XG1OV2P6uZZ5FSM9Ttw</yt:channelId>
+  <title>Introducing Gemini 3.7 Flash</title>
+  <link rel="alternate" href="https://www.youtube.com/watch?v=9_PtOVH2FPE"/>
+  <author>
+   <name>Google for Developers</name>
+   <uri>https://www.youtube.com/channel/UC_x5XG1OV2P6uZZ5FSM9Ttw</uri>
+  </author>
+  <published>2026-08-13T19:44:11+00:00</published>
+  <updated>2026-08-16T23:30:46+00:00</updated>
+  <media:group>
+   <media:title>Introducing Gemini 3.7 Flash</media:title>
+   <media:content url="https://www.youtube.com/v/9_PtOVH2FPE?version=3" type="application/x-shockwave-flash" width="640" height="390"/>
+   <media:thumbnail url="https://i2.ytimg.com/vi/9_PtOVH2FPE/hqdefault.jpg" width="480" height="360"/>
+   <media:description>Introducing Gemini 3.7 Flash — our most intelligent workhorse model yet for coding and agents.
+
+Follow along as we build an animated sprite-based 90s game using the model in Google Antigravity. We go from a single prompt to a plan, then to a playable game with assets generated by Nano Banana Pro and infinite remixing possibilities. 
+
+Explore agent-first workflows in Antigravity or start building in the Gemini API via Google AI Studio and Android Studio. 
+
+Subscribe to Google for Developers → https://goo.gle/developers 
+
+#GoogleDeepMind #GoogleAI 
+
+Speakers: 
+Products Mentioned: Google Antigravity, Gemini</media:description>
+   <media:community>
+    <media:starRating count="1711" average="5.00" min="1" max="5"/>
+    <media:statistics views="55299"/>
+   </media:community>
+  </media:group>
+ </entry>
+ <entry>
+  <id>yt:video:hfAkpEM9N5M</id>
+  <yt:videoId>hfAkpEM9N5M</yt:videoId>
+  <yt:channelId>UC_x5XG1OV2P6uZZ5FSM9Ttw</yt:channelId>
+  <title>How builders at YC Startup School are using Gemini &amp; Google AI</title>
+  <link rel="alternate" href="https://www.youtube.com/watch?v=hfAkpEM9N5M"/>
+  <author>
+   <name>Google for Developers</name>
+   <uri>https://www.youtube.com/channel/UC_x5XG1OV2P6uZZ5FSM9Ttw</uri>
+  </author>
+  <published>2026-08-06T23:00:08+00:00</published>
+  <updated>2026-08-10T01:03:27+00:00</updated>
+  <media:group>
+   <media:title>How builders at YC Startup School are using Gemini &amp; Google AI</media:title>
+   <media:content url="https://www.youtube.com/v/hfAkpEM9N5M?version=3" type="application/x-shockwave-flash" width="640" height="390"/>
+   <media:thumbnail url="https://i1.ytimg.com/vi/hfAkpEM9N5M/hqdefault.jpg" width="480" height="360"/>
+   <media:description>Google DeepMind’s Paige Bailey catches up with founders, engineers, and students at the YC Startup School after party to hear how they're using Gemini and Google AI in their work, from parsing multilingual receipts with Gemini Flash to antibiotic resistance research powered by AlphaFold to studying offline with Gemma.
+
+Subscribe to Google for Developers → https://goo.gle/developers  
+
+Speaker: Paige Bailey
+Products Mentioned:  Google AI, Gemini</media:description>
+   <media:community>
+    <media:starRating count="95" average="5.00" min="1" max="5"/>
+    <media:statistics views="3405"/>
+   </media:community>
+  </media:group>
+ </entry>
+ <entry>
+  <id>yt:video:Ujmx5PsT1IY</id>
+  <yt:videoId>Ujmx5PsT1IY</yt:videoId>
+  <yt:channelId>UC_x5XG1OV2P6uZZ5FSM9Ttw</yt:channelId>
+  <title>3 things to know about the new CopilotKit integration for Angular</title>
+  <link rel="alternate" href="https://www.youtube.com/shorts/Ujmx5PsT1IY"/>
+  <author>
+   <name>Google for Developers</name>
+   <uri>https://www.youtube.com/channel/UC_x5XG1OV2P6uZZ5FSM9Ttw</uri>
+  </author>
+  <published>2026-08-06T16:00:12+00:00</published>
+  <updated>2026-08-10T12:54:40+00:00</updated>
+  <media:group>
+   <media:title>3 things to know about the new CopilotKit integration for Angular</media:title>
+   <media:content url="https://www.youtube.com/v/Ujmx5PsT1IY?version=3" type="application/x-shockwave-flash" width="640" height="390"/>
+   <media:thumbnail url="https://i2.ytimg.com/vi/Ujmx5PsT1IY/hqdefault.jpg" width="480" height="360"/>
+   <media:description>From building agent-powered web applications to context-aware AI features, see how you can use CopilotKit integration for Angular in your workflows. 
+
+Resources: 
+ AG-UI user interface for ADK → https://goo.gle/4yUSZFj 
+Learn more about → https://goo.gle/4fHbPrZ 
+
+Subscribe to Google for Developers → https://goo.gle/developers 
+
+#GoogleDeveloperNews
+
+Speaker: Mark Thompson 
+Products Mentioned:  Angular</media:description>
+   <media:community>
+    <media:starRating count="220" average="5.00" min="1" max="5"/>
+    <media:statistics views="5812"/>
+   </media:community>
+  </media:group>
+ </entry>
+ <entry>
+  <id>yt:video:bo4ebVkhp28</id>
+  <yt:videoId>bo4ebVkhp28</yt:videoId>
+  <yt:channelId>UC_x5XG1OV2P6uZZ5FSM9Ttw</yt:channelId>
+  <title>Voice Agent observability with LangSmith 🌟</title>
+  <link rel="alternate" href="https://www.youtube.com/shorts/bo4ebVkhp28"/>
+  <author>
+   <name>Google for Developers</name>
+   <uri>https://www.youtube.com/channel/UC_x5XG1OV2P6uZZ5FSM9Ttw</uri>
+  </author>
+  <published>2026-08-05T16:00:00+00:00</published>
+  <updated>2026-08-09T01:04:21+00:00</updated>
+  <media:group>
+   <media:title>Voice Agent observability with LangSmith 🌟</media:title>
+   <media:content url="https://www.youtube.com/v/bo4ebVkhp28?version=3" type="application/x-shockwave-flash" width="640" height="390"/>
+   <media:thumbnail url="https://i3.ytimg.com/vi/bo4ebVkhp28/hqdefault.jpg" width="480" height="360"/>
+   <media:description>Caroline di Vittorio, Engineer at LangChain, builds a voice agent with the Google ADK and the Gemini Live model, then sets up tracing in LangSmith to see exactly what the agent is doing under the hood. Gemini Live is Google's native audio model. It's speech-to-speech, taking audio directly as input and producing audio as output without transcribing to text, which keeps latency low and makes the agent's voice sound natural and emotive.
+
+What's covered: building a terminal-based weather assistant with two tools, defining the LangSmith Google ADK plugin, registering it on the runner, recording user and agent audio so the trace captures only what the user actually heard, and reading the full trace in LangSmith, including audio playback, transcripts, tool calls, interruption events, and token-level cost breakdowns.
+
+Get started with the Gemini Live API. Grab an API key in Google AI Studio and start building.
+
+Resources:
+
+Gemini Live API docs →  https://goo.gle/4hNqR0H 
+Google ADK docs →  https://goo.gle/4wc2rSf 
+LangSmith docs →  https://goo.gle/4xH0A9l  
+
+Subscribe to Google for Developers → https://goo.gle/developers  
+
+What are you building with Gemini Live? Drop it in the comments.
+
+Speaker: Caroline di Vittorio, 
+Products Mentioned:  Google AI, Gemini</media:description>
+   <media:community>
+    <media:starRating count="177" average="5.00" min="1" max="5"/>
+    <media:statistics views="6089"/>
+   </media:community>
+  </media:group>
+ </entry>
+ <entry>
+  <id>yt:video:qwUM4Sk1_nE</id>
+  <yt:videoId>qwUM4Sk1_nE</yt:videoId>
+  <yt:channelId>UC_x5XG1OV2P6uZZ5FSM9Ttw</yt:channelId>
+  <title>Which version of core ends up in your lockfile?</title>
+  <link rel="alternate" href="https://www.youtube.com/shorts/qwUM4Sk1_nE"/>
+  <author>
+   <name>Google for Developers</name>
+   <uri>https://www.youtube.com/channel/UC_x5XG1OV2P6uZZ5FSM9Ttw</uri>
+  </author>
+  <published>2026-08-03T13:00:31+00:00</published>
+  <updated>2026-08-07T00:28:11+00:00</updated>
+  <media:group>
+   <media:title>Which version of core ends up in your lockfile?</media:title>
+   <media:content url="https://www.youtube.com/v/qwUM4Sk1_nE?version=3" type="application/x-shockwave-flash" width="640" height="390"/>
+   <media:thumbnail url="https://i2.ytimg.com/vi/qwUM4Sk1_nE/hqdefault.jpg" width="480" height="360"/>
+   <media:description>A dependency resolution puzzle about a failure mode that hides from normal debugging.
+Three packages share a single dependency, and each declares its own version constraint. Checked in pairs, every combination is compatible. The question is what happens when all three are installed together. Watch the clip and comment: which version of the shared dependency gets installed?
+
+Subscribe to Google for Developers → https://goo.gle/developers 
+
+Speakers: Jasmyne Roberts</media:description>
+   <media:community>
+    <media:starRating count="163" average="5.00" min="1" max="5"/>
+    <media:statistics views="6871"/>
+   </media:community>
+  </media:group>
+ </entry>
+ <entry>
+  <id>yt:video:-rYFDefcq3k</id>
+  <yt:videoId>-rYFDefcq3k</yt:videoId>
+  <yt:channelId>UC_x5XG1OV2P6uZZ5FSM9Ttw</yt:channelId>
+  <title>Introducing Gemini Robotics 2</title>
+  <link rel="alternate" href="https://www.youtube.com/watch?v=-rYFDefcq3k"/>
+  <author>
+   <name>Google for Developers</name>
+   <uri>https://www.youtube.com/channel/UC_x5XG1OV2P6uZZ5FSM9Ttw</uri>
+  </author>
+  <published>2026-07-31T19:00:37+00:00</published>
+  <updated>2026-08-08T06:48:18+00:00</updated>
+  <media:group>
+   <media:title>Introducing Gemini Robotics 2</media:title>
+   <media:content url="https://www.youtube.com/v/-rYFDefcq3k?version=3" type="application/x-shockwave-flash" width="640" height="390"/>
+   <media:thumbnail url="https://i2.ytimg.com/vi/-rYFDefcq3k/hqdefault.jpg" width="480" height="360"/>
+   <media:description>Carolina Parada, Stuart Bowers, Kanishka Rao, and Jie Tan from Google DeepMind join host Logan Kilpatrick inside the Gemini Robotics Lab to introduce Gemini Robotics 2, Google DeepMind's new suite of models bringing whole body intelligence, dexterity, and multi-robot collaboration to general purpose robotics. Their conversation covers the arc from reinforcement learning to vision language action models and the open challenge of physical AGI.
+
+Subscribe to Google for Developers → https://goo.gle/developers  
+
+Speaker: Carolina Parada, Stuart Bowers, Kanishka Rao, Jie Tan 
+Products Mentioned:  Google AI, Gemini</media:description>
+   <media:community>
+    <media:starRating count="436" average="5.00" min="1" max="5"/>
+    <media:statistics views="14728"/>
+   </media:community>
+  </media:group>
+ </entry>
+ <entry>
+  <id>yt:video:z6l5nyE_6-I</id>
+  <yt:videoId>z6l5nyE_6-I</yt:videoId>
+  <yt:channelId>UC_x5XG1OV2P6uZZ5FSM9Ttw</yt:channelId>
+  <title>Voice Agent observability with LangSmith</title>
+  <link rel="alternate" href="https://www.youtube.com/watch?v=z6l5nyE_6-I"/>
+  <author>
+   <name>Google for Developers</name>
+   <uri>https://www.youtube.com/channel/UC_x5XG1OV2P6uZZ5FSM9Ttw</uri>
+  </author>
+  <published>2026-07-31T16:22:34+00:00</published>
+  <updated>2026-08-04T03:17:29+00:00</updated>
+  <media:group>
+   <media:title>Voice Agent observability with LangSmith</media:title>
+   <media:content url="https://www.youtube.com/v/z6l5nyE_6-I?version=3" type="application/x-shockwave-flash" width="640" height="390"/>
+   <media:thumbnail url="https://i3.ytimg.com/vi/z6l5nyE_6-I/hqdefault.jpg" width="480" height="360"/>
+   <media:description>Caroline di Vittorio, Engineer at LangChain, builds a voice agent with the Google ADK and the Gemini Live model, then sets up tracing in LangSmith to see exactly what the agent is doing under the hood. Gemini Live is Google's native audio model. It's speech-to-speech, taking audio directly as input and producing audio as output without transcribing to text, which keeps latency low and makes the agent's voice sound natural and emotive.
+
+What's covered: building a terminal-based weather assistant with two tools, defining the LangSmith Google ADK plugin, registering it on the runner, recording user and agent audio so the trace captures only what the user actually heard, and reading the full trace in LangSmith, including audio playback, transcripts, tool calls, interruption events, and token-level cost breakdowns.
+
+Get started with the Gemini Live API. Grab an API key in Google AI Studio and start building.
+
+Resources:
+Gemini Live API docs → https://goo.gle/4hDlQYv
+Google ADK docs → https://goo.gle/3U4sjlq 
+LangSmith docs → https://goo.gle/3Tt9CI4  
+
+What are you building with Gemini Live? Drop it in the comments.
+
+Subscribe to Google for Developers → https://goo.gle/developers 
+
+Speaker: 
+Products Mentioned:  Google AI, ADK,</media:description>
+   <media:community>
+    <media:starRating count="166" average="5.00" min="1" max="5"/>
+    <media:statistics views="3847"/>
+   </media:community>
+  </media:group>
+ </entry>
+ <entry>
+  <id>yt:video:8uncdjpygSU</id>
+  <yt:videoId>8uncdjpygSU</yt:videoId>
+  <yt:channelId>UC_x5XG1OV2P6uZZ5FSM9Ttw</yt:channelId>
+  <title>The documentary all devs would watch tbh…</title>
+  <link rel="alternate" href="https://www.youtube.com/shorts/8uncdjpygSU"/>
+  <author>
+   <name>Google for Developers</name>
+   <uri>https://www.youtube.com/channel/UC_x5XG1OV2P6uZZ5FSM9Ttw</uri>
+  </author>
+  <published>2026-07-31T04:00:35+00:00</published>
+  <updated>2026-07-31T18:11:53+00:00</updated>
+  <media:group>
+   <media:title>The documentary all devs would watch tbh…</media:title>
+   <media:content url="https://www.youtube.com/v/8uncdjpygSU?version=3" type="application/x-shockwave-flash" width="640" height="390"/>
+   <media:thumbnail url="https://i1.ytimg.com/vi/8uncdjpygSU/hqdefault.jpg" width="480" height="360"/>
+   <media:description>We know it’s going to be a good story, especially when you force-pushed to prod… on a FRIDAY. 
+
+Subscribe to Google for Developers → https://goo.gle/developers 
+
+Speakers: Micah-Christian Foster</media:description>
+   <media:community>
+    <media:starRating count="99" average="5.00" min="1" max="5"/>
+    <media:statistics views="7482"/>
+   </media:community>
+  </media:group>
+ </entry>
+ <entry>
+  <id>yt:video:BXzFk5kK5_Q</id>
+  <yt:videoId>BXzFk5kK5_Q</yt:videoId>
+  <yt:channelId>UC_x5XG1OV2P6uZZ5FSM9Ttw</yt:channelId>
+  <title>Android Studio Quail 2, the Build with Gemini XPRIZE, and more! - Google Developer News July 2026</title>
+  <link rel="alternate" href="https://www.youtube.com/watch?v=BXzFk5kK5_Q"/>
+  <author>
+   <name>Google for Developers</name>
+   <uri>https://www.youtube.com/channel/UC_x5XG1OV2P6uZZ5FSM9Ttw</uri>
+  </author>
+  <published>2026-07-30T16:00:39+00:00</published>
+  <updated>2026-08-03T05:44:28+00:00</updated>
+  <media:group>
+   <media:title>Android Studio Quail 2, the Build with Gemini XPRIZE, and more! - Google Developer News July 2026</media:title>
+   <media:content url="https://www.youtube.com/v/BXzFk5kK5_Q?version=3" type="application/x-shockwave-flash" width="640" height="390"/>
+   <media:thumbnail url="https://i3.ytimg.com/vi/BXzFk5kK5_Q/hqdefault.jpg" width="480" height="360"/>
+   <media:description>Welcome to Google Developer News! Join Christy Yao as we dive into the latest tools, updates, and opportunities for developers. In this episode, we cover the stable release of Android Studio Quail 2, new model evaluations in Android Bench, an exclusive look at YouTube’s AI prototyping stack, and how you can compete for a share of $2,000,000 in the Build with Gemini XPRIZE! 
+
+Chapters: 
+
+0:00 - Intro 
+0:13 - Android Studio Quail 2 is Now Stable (Parallel chats, LeakCanary, App Quality Insights)
+1:10 - Android Bench Updates &amp; Harbor Framework
+2:00 - Inside Look: YouTube's AI Prototyping Stack (Emergent Premiere)
+2:48 - Build with Gemini XPRIZE ($2M Competition)
+3:38 - Outro &amp; Keep Building
+
+
+Resources: 
+Android Studio Quail 2  → https://goo.gle/4bloC0A  
+Android Bench → https://goo.gle/4fMcNCb 
+Emergent 1st episode  → https://goo.gle/4fLHDe5 
+Build with Gemini XPRIZE → https://goo.gle/3TIfnBG 
+
+Watch more Google Developer News → https://goo.gle/4e8Rysd  
+Subscribe to Google for Developers → https://goo.gle/developers  
+
+#GoogleDeveloperNews 
+
+Speaker: Christy Yao
+Products Mentioned:  Google AI, Gemini, Android</media:description>
+   <media:community>
+    <media:starRating count="121" average="5.00" min="1" max="5"/>
+    <media:statistics views="2852"/>
+   </media:community>
+  </media:group>
+ </entry>
+ <entry>
+  <id>yt:video:cBBWorSU0P4</id>
+  <yt:videoId>cBBWorSU0P4</yt:videoId>
+  <yt:channelId>UC_x5XG1OV2P6uZZ5FSM9Ttw</yt:channelId>
+  <title>Building the ultimate morning dashboard with Gemini 3.6 Flash and Nano Banana</title>
+  <link rel="alternate" href="https://www.youtube.com/shorts/cBBWorSU0P4"/>
+  <author>
+   <name>Google for Developers</name>
+   <uri>https://www.youtube.com/channel/UC_x5XG1OV2P6uZZ5FSM9Ttw</uri>
+  </author>
+  <published>2026-07-29T23:00:37+00:00</published>
+  <updated>2026-08-07T21:15:02+00:00</updated>
+  <media:group>
+   <media:title>Building the ultimate morning dashboard with Gemini 3.6 Flash and Nano Banana</media:title>
+   <media:content url="https://www.youtube.com/v/cBBWorSU0P4?version=3" type="application/x-shockwave-flash" width="640" height="390"/>
+   <media:thumbnail url="https://i4.ytimg.com/vi/cBBWorSU0P4/hqdefault.jpg" width="480" height="360"/>
+   <media:description>Raph vibe coded an e-ink picture frame with Gemini 3.6 Flash and Nano Banana that helps his family start their day. 
+
+Learn how he did it using Antigravity and follow the open source guide to build your own too.
+
+Resources: 
+
+Learn more → https://goo.gle/4wpzbs0 
+
+Subscribe to Google for Developers → https://goo.gle/developers  
+
+Speaker: Raphael D. 
+Products Mentioned:  Google AI, Gemini</media:description>
+   <media:community>
+    <media:starRating count="233" average="5.00" min="1" max="5"/>
+    <media:statistics views="9407"/>
+   </media:community>
+  </media:group>
+ </entry>
+ <entry>
+  <id>yt:video:UUozyqDNRGg</id>
+  <yt:videoId>UUozyqDNRGg</yt:videoId>
+  <yt:channelId>UC_x5XG1OV2P6uZZ5FSM9Ttw</yt:channelId>
+  <title>Does this install succeed? If it does, which three versions end up in your lockfile?</title>
+  <link rel="alternate" href="https://www.youtube.com/shorts/UUozyqDNRGg"/>
+  <author>
+   <name>Google for Developers</name>
+   <uri>https://www.youtube.com/channel/UC_x5XG1OV2P6uZZ5FSM9Ttw</uri>
+  </author>
+  <published>2026-07-27T13:00:08+00:00</published>
+  <updated>2026-08-03T05:43:34+00:00</updated>
+  <media:group>
+   <media:title>Does this install succeed? If it does, which three versions end up in your lockfile?</media:title>
+   <media:content url="https://www.youtube.com/v/UUozyqDNRGg?version=3" type="application/x-shockwave-flash" width="640" height="390"/>
+   <media:thumbnail url="https://i2.ytimg.com/vi/UUozyqDNRGg/hqdefault.jpg" width="480" height="360"/>
+   <media:description>A dependency resolution dev challenge from a situation every dev has faced at least once. Your app needs three packages. The registry has six versions, each with its own constraints. The resolver can pick only one version of each package, and it prefers the newest it can get. Which versions get installed if any?
+
+Subscribe to Google for Developers → https://goo.gle/developers 
+
+Speakers: Anaya Mehta</media:description>
+   <media:community>
+    <media:starRating count="189" average="5.00" min="1" max="5"/>
+    <media:statistics views="6249"/>
+   </media:community>
+  </media:group>
+ </entry>
+</feed>
