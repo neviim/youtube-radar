@@ -76,7 +76,7 @@ no horário de `YTR_DIGEST_AT`.
 | `canais` | Lista, ativa ou desativa canal monitorado |
 | `ciclo` | Um ciclo de monitoração: cadastro pelo Discord + verificação de vídeo novo |
 | `perfil` | Perfil de gosto lido do vault (somente leitura). `--resolver` mapeia URL de vídeo → canal |
-| `digest` | Recomendação diária do pool + captura de feedback (👍/👎) dos digests anteriores |
+| `digest` | Recomendação diária dos dois pools (canais do vault + Shorts suprimidos de canal monitorado) + captura de feedback (👍/👎) dos digests anteriores |
 | `sinais` | Os 👍/👎 capturados, por vídeo |
 | `doctor` | Diagnóstico — roda mesmo com `.env` inválido |
 
@@ -106,9 +106,6 @@ mensagens de commit de cada fase.
 
 ## O que falta / decisões em aberto
 
-- **Pool 2** (Shorts e baixa afinidade dos canais monitorados) não está
-  implementado — só o Pool 1 (canais que o vault mostra que você gosta). Ver
-  `ytr/pool.py`.
 - **`LLM_BACKEND=anthropic`** (API direta, com chave) está documentado no
   `.env.example` mas não implementado — hoje só `claude-cli` e `codex-cli`
   (binário local) funcionam.

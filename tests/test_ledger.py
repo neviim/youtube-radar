@@ -20,10 +20,12 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from ytr import ledger
+from ytr.canal import Canal
+from ytr.feed import Video
 from ytr.ledger import (
     DECISOES, Digest, ItemDeDigest, avisos_recentes, caminho_avisos, caminho_digest,
-    carregar_digest, digests_recentes, registrar_aviso, registrar_sinal, salvar_digest,
-    sinais,
+    caminho_pool2, candidatos_pool2_recentes, carregar_digest, digests_recentes,
+    registrar_aviso, registrar_candidato_pool2, registrar_sinal, salvar_digest, sinais,
 )
 from ytr.state import anexar_linha
 
@@ -146,6 +148,56 @@ class TestSinais(Base):
 
     def test_sem_arquivo_a_lista_e_vazia(self):
         self.assertEqual([], sinais(self.dir))
+
+
+class TestPool2(Base):
+    def _video(self, video_id="v1", titulo="Um short qualquer"):
+        return Video(video_id=video_id, titulo=titulo, url=f"https://youtu.be/{video_id}",
+                      channel_id=CANAL_A, descricao="descrição", publicado="2026-08-24T10:00:00+00:00",
+                      views=123)
+
+    def _canal(self, handle="algumcanal"):
+        return Canal(channel_id=CANAL_A, handle=handle)
+
+    def test_registrar_e_reler(self):
+        registrar_candidato_pool2(self.dir, self._video(), self._canal())
+        candidatos = candidatos_pool2_recentes(self.dir, dias=1)
+        self.assertEqual(1, len(candidatos))
+        self.assertEqual("v1", candidatos[0]["video_id"])
+        self.assertEqual("algumcanal", candidatos[0]["handle"])
+        self.assertEqual("short", candidatos[0]["motivo"])
+
+    def test_o_arquivo_e_mensal(self):
+        registrar_candidato_pool2(self.dir, self._video(), self._canal())
+        esperado = caminho_pool2(self.dir)
+        self.assertTrue(esperado.is_file())
+        self.assertRegex(esperado.name, r"^\d{4}-\d{2}\.jsonl$")
+
+    def test_o_mesmo_video_registrado_duas_vezes_nao_duplica_na_leitura(self):
+        """Não devia acontecer — marcar como visto impede reaparecer — mas a leitura
+        dedupa por `video_id` de qualquer jeito, ficando com o registro mais recente."""
+        registrar_candidato_pool2(self.dir, self._video(), self._canal())
+        registrar_candidato_pool2(self.dir, self._video(), self._canal())
+        candidatos = candidatos_pool2_recentes(self.dir, dias=1)
+        self.assertEqual(1, len(candidatos))
+
+    def test_fora_da_janela_e_descartado(self):
+        anexar_linha(caminho_pool2(self.dir), {
+            "em": (datetime.now(timezone.utc) - timedelta(days=10)).isoformat(),
+            "video_id": "antigo", "channel_id": CANAL_A, "handle": "algumcanal",
+        })
+        self.assertEqual([], candidatos_pool2_recentes(self.dir, dias=3))
+
+    def test_a_janela_le_dois_arquivos_mensais(self):
+        hoje = datetime.now(timezone.utc)
+        mes_passado = hoje - timedelta(days=31)
+        anexar_linha(caminho_pool2(self.dir, mes_passado.date()), {
+            "em": (hoje - timedelta(days=1)).isoformat(timespec="seconds"),
+            "video_id": "vAntigo", "channel_id": CANAL_A, "handle": "algumcanal",
+        })
+        registrar_candidato_pool2(self.dir, self._video(), self._canal())
+        ids = {c["video_id"] for c in candidatos_pool2_recentes(self.dir, dias=3)}
+        self.assertEqual({"v1", "vAntigo"}, ids)
 
 
 class TestDigest(Base):

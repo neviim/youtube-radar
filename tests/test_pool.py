@@ -108,6 +108,35 @@ class TestBuscarPool(unittest.TestCase):
         self.assertEqual([], saida)
 
 
+class TestBuscarPool2(unittest.TestCase):
+    def setUp(self):
+        import tempfile
+        from pathlib import Path
+        self.tmp = tempfile.TemporaryDirectory()
+        self.state = Path(self.tmp.name)
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def test_agrupa_candidatos_persistidos_por_handle(self):
+        from ytr.canal import Canal
+        from ytr.ledger import registrar_candidato_pool2
+
+        cfg = Config(state_dir=self.state, pool2_janela_dias=3)
+        registrar_candidato_pool2(self.state, _video("v1", titulo="Short 1"), Canal(channel_id="UC1", handle="a"))
+        registrar_candidato_pool2(self.state, _video("v2", titulo="Short 2"), Canal(channel_id="UC1", handle="a"))
+        registrar_candidato_pool2(self.state, _video("v3", titulo="Short 3"), Canal(channel_id="UC2", handle="b"))
+
+        saida = dict(pool.buscar_pool2(cfg))
+        self.assertEqual({"a", "b"}, set(saida))
+        self.assertEqual({"v1", "v2"}, {v.video_id for v in saida["a"]})
+        self.assertTrue(all(v.is_short for v in saida["a"]))
+
+    def test_nada_persistido_devolve_lista_vazia(self):
+        cfg = Config(state_dir=self.state, pool2_janela_dias=3)
+        self.assertEqual([], pool.buscar_pool2(cfg))
+
+
 class TestMontarCandidatos(unittest.TestCase):
     def _cfg(self):
         return Config(peso_canal=5.0, peso_tag=2.0, peso_lexico=1.0,

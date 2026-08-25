@@ -91,6 +91,11 @@ class Config:
     avisar_shorts: bool = False
     lembrar_ids: int = 50
 
+    # pool 2 — vídeos de canal monitorado suprimidos do aviso individual (hoje, só
+    # Shorts), reaproveitados como candidato do digest em vez de descartados (§D7)
+    pool2_ativo: bool = True
+    pool2_janela_dias: int = 3
+
     # gosto
     vault_path: Path = field(default_factory=lambda: Path(os.path.expanduser(VAULT_PADRAO)))
     peso_canal: float = 5.0
@@ -149,6 +154,8 @@ class Config:
             max_avisos_canal=_int("YTR_MAX_AVISOS_CANAL", 3),
             avisar_shorts=_bool("YTR_AVISAR_SHORTS", "0"),
             lembrar_ids=_int("YTR_LEMBRAR_IDS", 50),
+            pool2_ativo=_bool("YTR_POOL2_ATIVO", "1"),
+            pool2_janela_dias=_int("YTR_POOL2_JANELA_DIAS", 3),
             vault_path=Path(os.path.expanduser(vault or VAULT_PADRAO)),
             peso_canal=_float("YTR_PESO_CANAL", 5.0),
             peso_tag=_float("YTR_PESO_TAG", 2.0),

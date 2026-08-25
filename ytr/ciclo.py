@@ -268,6 +268,8 @@ def rodar(
         for video in todos_novos:
             if video.video_id not in ids_a_avisar:
                 atual.lembrar(video.video_id, cfg.lembrar_ids)
+                if cfg.pool2_ativo:
+                    ledger.registrar_candidato_pool2(cfg.state_dir, video, canal)
 
         do_canal = novos[: cfg.max_avisos_canal]
         if len(novos) > len(do_canal):

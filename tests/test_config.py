@@ -64,6 +64,8 @@ class TestFromEnv(Base):
         self.assertEqual(900, cfg.piso_segundos)
         self.assertFalse(cfg.post_enabled)
         self.assertFalse(cfg.avisar_shorts)
+        self.assertTrue(cfg.pool2_ativo)
+        self.assertEqual(3, cfg.pool2_janela_dias)
         self.assertEqual("none", cfg.llm_backend)
         self.assertEqual(Path(".state"), cfg.state_dir)
 

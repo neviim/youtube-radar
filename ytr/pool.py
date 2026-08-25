@@ -1,18 +1,19 @@
 """O pool de recomendação e a montagem do digest diário (Fase 7, D7 do plano).
 
-**Dois pools no plano; só o primeiro está implementado aqui.**
+**Dois pools.**
 
 - **Pool 1** — os canais que o vault mostra que ele gosta (`perfil.canais_do_pool`).
   Não são monitorados (não geram aviso individual); buscados numa grade lenta, 1x/dia:
   60 canais × ~4,9 KB ≈ 294 KB — é o que transforma os canais de um-vídeo-só do vault
   em pool de recomendação em vez de ruído.
-- **Pool 2** [não implementado, marcado de propósito] — vídeos dos canais **monitorados**
-  que não passaram a barra do aviso (Shorts, baixa afinidade). `ciclo.rodar()` hoje só
-  *conta* `suprimidos_short` — não persiste qual vídeo era, porque marcá-lo como
-  avisado (`lembrar`) é o que impede o mesmo Short de reaparecer a cada ciclo. Fazer
-  Pool 2 direito exige um segundo lugar para guardar "suprimido, mas candidato", o que
-  muda o que a Fase 3 (fechada e testada) grava. Não fiz essa mudança cruzada sem
-  alinhar — fica em aberto, não como decisão silenciosa.
+- **Pool 2** — vídeos dos canais **monitorados** que não passaram a barra do aviso
+  individual (hoje, só Shorts — `avisar_shorts: false`). `ciclo.rodar()` persiste o
+  candidato no instante da supressão (`ledger.registrar_candidato_pool2`), *antes* de
+  marcá-lo como visto — sem tocar no que a Fase 3 grava em `EstadoCanal`. `buscar_pool2`
+  só relê esse ledger; não gasta rede, porque o feed já foi buscado no ciclo que o
+  suprimiu. Fica atrás de `YTR_POOL2_ATIVO`, e a janela de leitura é
+  `YTR_POOL2_JANELA_DIAS` — velho o bastante para não competir mais no ranking (o
+  componente de recência já pesa isso), a janela só limita quanto ledger é relido.
 
 **A camada determinística roda sempre, e primeiro** (D7): afinidade de canal e de tag
 (`gosto.Perfil.pontuar_afinidade`), sobreposição léxica contra o corpus do perfil
@@ -158,6 +159,29 @@ def buscar_pool(cfg: Config, mapa: dict, cliente: Cliente) -> list[tuple[str, li
             continue
         saida.append((handle, feed.videos))
     return saida
+
+
+def buscar_pool2(cfg: Config) -> list[tuple[str, list[Video]]]:
+    """Candidatos do Pool 2 — relidos do ledger, nunca da rede (ver docstring do
+    módulo). Cada `handle` some com no máximo os candidatos que foram de fato
+    suprimidos dentro de `cfg.pool2_janela_dias`; não é o feed do canal, é só o que
+    o ciclo marcou como suprimido."""
+    registros = ledger.candidatos_pool2_recentes(cfg.state_dir, cfg.pool2_janela_dias)
+    por_canal: dict[str, list[Video]] = {}
+    for registro in registros:
+        handle = registro.get("handle") or registro.get("channel_id", "")
+        por_canal.setdefault(handle, []).append(Video(
+            video_id=registro.get("video_id", ""),
+            titulo=registro.get("titulo", ""),
+            url=registro.get("url", ""),
+            channel_id=registro.get("channel_id", ""),
+            canal=handle,
+            publicado=registro.get("publicado", ""),
+            descricao=registro.get("descricao", ""),
+            is_short=True,
+            views=registro.get("views", 0),
+        ))
+    return list(por_canal.items())
 
 
 @dataclass

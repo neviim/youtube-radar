@@ -146,6 +146,59 @@ def avisos_recentes(state_dir: Path, dias: int) -> list[dict]:
     return sorted(saida, key=lambda r: r.get("em", ""))
 
 
+# -------------------------------------------------------------------- pool 2
+
+
+def caminho_pool2(state_dir: Path, quando: date | None = None) -> Path:
+    quando = quando or datetime.now(timezone.utc).date()
+    return Path(state_dir) / "pool2" / f"{quando.strftime('%Y-%m')}.jsonl"
+
+
+def registrar_candidato_pool2(state_dir: Path, video, canal) -> None:
+    """Um vídeo de canal monitorado suprimido do aviso individual (hoje, só Shorts)
+    — persistido no instante da supressão, para concorrer no digest como Pool 2
+    (§D7) em vez de simplesmente desaparecer. Não gasta rede: o ciclo já buscou o
+    feed para chegar até aqui; isto só guarda o que ele já tinha em mãos.
+    """
+    anexar_linha(
+        caminho_pool2(state_dir),
+        {
+            "em": agora_utc(),
+            "video_id": video.video_id,
+            "channel_id": video.channel_id,
+            "handle": canal.handle or canal.channel_id,
+            "titulo": video.titulo,
+            "url": video.url,
+            "descricao": video.descricao,
+            "publicado": video.publicado,
+            "views": video.views,
+            "motivo": "short",
+        },
+    )
+
+
+def candidatos_pool2_recentes(state_dir: Path, dias: int) -> list[dict]:
+    """Os candidatos de Pool 2 dos últimos N dias, **um registro por vídeo**.
+
+    Dedupa por `video_id` porque, embora marcar como visto já devesse impedir o
+    mesmo Short de ser persistido duas vezes, dedupar na leitura é barato e fecha a
+    porta se essa suposição estiver errada num canal específico.
+    """
+    hoje = datetime.now(timezone.utc).date()
+    corte = datetime.now(timezone.utc) - timedelta(days=dias)
+    arquivos = {caminho_pool2(state_dir, hoje), caminho_pool2(state_dir, hoje - timedelta(days=31))}
+    por_video: dict[str, dict] = {}
+    for arquivo in arquivos:
+        for registro in ler_linhas(arquivo):
+            try:
+                quando = datetime.fromisoformat(registro.get("em", ""))
+            except ValueError:
+                continue
+            if quando >= corte:
+                por_video[registro.get("video_id", "")] = registro
+    return sorted(por_video.values(), key=lambda r: r.get("em", ""))
+
+
 # ------------------------------------------------------------------- sinais
 
 

@@ -438,7 +438,8 @@ def cmd_digest(args) -> int:
         mod_pool.salvar_mapa_pool(cfg.state_dir, mapa_pool)
 
         pool = mod_pool.buscar_pool(cfg, mapa_pool, cliente)
-        candidatos = mod_pool.montar_candidatos(cfg, perfil, pool)
+        pool2 = mod_pool.buscar_pool2(cfg) if cfg.pool2_ativo else []
+        candidatos = mod_pool.montar_candidatos(cfg, perfil, pool + pool2)
         candidatos = mod_pool.selecionar(cfg, candidatos, cliente)
         video_por_id = {c.video.video_id: c.video for c in candidatos}
 

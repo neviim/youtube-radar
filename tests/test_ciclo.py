@@ -25,7 +25,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from ytr import ciclo as mod_ciclo
-from ytr import limitador as mod_limitador
+from ytr import ledger, limitador as mod_limitador
 from ytr.canal import Canais, ChannelId
 from ytr.ciclo import (
     PostagemBloqueada, agendar, agendar_falha, devido, novidades, rodar, semear,
@@ -264,6 +264,43 @@ class TestShorts(Base):
                         ClienteFalso({CANAL_A: (200, montar_feed(ids, shorts={"bbbbbbbbbbb"}))}),
                         PublicadorFalso())
         self.assertEqual(0, segundo.suprimidos_short)
+
+    def test_short_suprimido_fica_disponivel_para_o_pool_2(self):
+        """Suprimir do aviso individual não pode significar perder o vídeo — ele tem
+        de sobreviver como candidato do digest (§D7, `ytr.pool`)."""
+        ids = ["aaaaaaaaaaa", "bbbbbbbbbbb"]
+        canais, estado = self.canais_com(CANAL_A), Estado(self.state)
+        rodar(self.cfg, canais, estado,
+              ClienteFalso({CANAL_A: (200, montar_feed(ids, shorts={"bbbbbbbbbbb"}))}),
+              PublicadorFalso())
+        atual = estado.carregar(CANAL_A)
+        atual.avisados, atual.proxima_busca = [], None
+        estado.salvar(atual)
+
+        rodar(self.cfg, canais, estado,
+              ClienteFalso({CANAL_A: (200, montar_feed(ids, shorts={"bbbbbbbbbbb"}))}),
+              PublicadorFalso())
+
+        candidatos = ledger.candidatos_pool2_recentes(self.state, dias=1)
+        self.assertEqual(["bbbbbbbbbbb"], [c["video_id"] for c in candidatos])
+        self.assertEqual("short", candidatos[0]["motivo"])
+
+    def test_pool2_desligado_nao_persiste_nada(self):
+        cfg = Config(state_dir=self.state, post_enabled=True, lembrar_ids=50, pool2_ativo=False)
+        ids = ["aaaaaaaaaaa", "bbbbbbbbbbb"]
+        canais, estado = self.canais_com(CANAL_A), Estado(self.state)
+        rodar(cfg, canais, estado,
+              ClienteFalso({CANAL_A: (200, montar_feed(ids, shorts={"bbbbbbbbbbb"}))}),
+              PublicadorFalso())
+        atual = estado.carregar(CANAL_A)
+        atual.avisados, atual.proxima_busca = [], None
+        estado.salvar(atual)
+
+        rodar(cfg, canais, estado,
+              ClienteFalso({CANAL_A: (200, montar_feed(ids, shorts={"bbbbbbbbbbb"}))}),
+              PublicadorFalso())
+
+        self.assertEqual([], ledger.candidatos_pool2_recentes(self.state, dias=1))
 
     def test_avisar_shorts_por_canal_vence_o_padrao_global(self):
         estado = EstadoCanal(channel_id=CANAL_A, semeado=True)
