@@ -56,7 +56,15 @@ from .trava import TravaOcupada
 # O `canais.yaml` não mora no `.state`: ele é a curadoria dele, versionável e editável à
 # mão, enquanto `.state/` é derivado e descartável. Misturar os dois faria um `rm -rf
 # .state` para limpar cursor apagar também a lista de canais.
-CANAIS_PADRAO = "canais.yaml"
+#
+# Mora em `curadoria/`, não na raiz do repo: um bind mount Docker de **arquivo único**
+# não pode ser substituído por `os.replace` (a escrita atômica que `canais.salvar()`
+# usa) — o kernel recusa renomear por cima de um ponto de montagem, com "Device or
+# resource busy". Medido ao vivo: o primeiro cadastro por Discord dentro do container
+# quebrava exatamente aqui. Um diretório inteiro montado não tem esse problema — só um
+# arquivo montado sozinho tem — daí `curadoria/` existir como diretório próprio em vez
+# de o arquivo ficar solto na raiz.
+CANAIS_PADRAO = "curadoria/canais.yaml"
 
 # Orçamento de leitura do perfil, em milissegundos. Vem do plano: acima disto, a leitura
 # do vault deixa de caber dentro de um ciclo e a decisão de reler a cada vez muda.

@@ -49,11 +49,15 @@ services:
     volumes:
       - ${YTR_HOST_VAULT:?rode ./ytr.sh, ou exporte YTR_HOST_VAULT com o caminho absoluto do vault}:/vault:ro
       - ./.state:/app/.state
-      - ./canais.yaml:/app/canais.yaml
+      # Diretório inteiro, não o arquivo sozinho: um bind mount de **arquivo único**
+      # não sobrevive à escrita atômica (`os.replace` bate em "Device or resource
+      # busy" — o kernel recusa renomear por cima de um ponto de montagem). Medido ao
+      # vivo: o primeiro cadastro por Discord dentro do container quebrava aqui.
+      - ./curadoria:/app/curadoria
       # Login do claude/codex compartilhado com o host, mesmo desenho do
-      # discord-link-brain. Hoje YTR_LLM_BACKEND=none é o único caminho
-      # implementado (Fase 8 não existe ainda) — sem as variáveis abaixo
-      # exportadas, isto monta só o placeholder que explica o que falta.
+      # discord-link-brain. Só tem efeito com YTR_LLM_BACKEND=claude-cli/codex-cli
+      # (Fase 8) — sem as variáveis abaixo exportadas, isto monta só o placeholder
+      # que explica o que falta.
       - ${YTR_CLAUDE_BIN:-./docker/placeholder/claude}:/usr/local/bin/claude:ro
       - ${YTR_CLAUDE_HOME:-./docker/placeholder/home}:/home/ytr/.claude
       - ${YTR_CODEX_BIN:-./docker/placeholder/claude}:/usr/local/bin/codex:ro

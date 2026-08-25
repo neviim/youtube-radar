@@ -88,6 +88,16 @@ class Base(unittest.TestCase):
         canais.salvar()
 
 
+class TestCaminhoPadraoDeCanais(unittest.TestCase):
+    def test_mora_em_curadoria_nao_na_raiz(self):
+        """Não pode voltar a ser `canais.yaml` solto na raiz: um bind mount Docker de
+        arquivo único quebra a escrita atômica (`os.replace` bate em "Device or
+        resource busy") — medido ao vivo no primeiro cadastro por Discord dentro do
+        container. `curadoria/` é diretório, e diretório montado não tem esse problema.
+        """
+        self.assertEqual("curadoria/canais.yaml", cli.CANAIS_PADRAO)
+
+
 class TestSemArgumento(Base):
     def test_sem_subcomando_imprime_ajuda_e_sai_dois(self):
         """Critério de pronto da Fase 0.

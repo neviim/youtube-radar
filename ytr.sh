@@ -59,10 +59,7 @@ TIMEZONE="$(env_get TZ)"; export TIMEZONE="${TIMEZONE:-UTC}"
 
 YTR_UID="$(id -u)"; YTR_GID="$(id -g)"; export YTR_UID YTR_GID
 
-# Bind mount de arquivo único: se `canais.yaml` não existir no host, o docker cria
-# um diretório no lugar dele — daí o touch, antes de qualquer coisa.
-touch canais.yaml
-mkdir -p .state
+mkdir -p curadoria .state
 
 usage() { sed -n '2,20p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; }
 
