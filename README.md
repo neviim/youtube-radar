@@ -83,6 +83,15 @@ no horário de `YTR_DIGEST_AT`.
 Todo comando que escreve aceita `--seco` onde faz sentido: mostra o que faria,
 sem tocar em nada.
 
+## Se o YouTube começar a responder 404 pra tudo
+
+Já aconteceu (medido): volume alto de requisição num período curto faz o
+YouTube bloquear o IP por um tempo, inclusive para páginas nunca consultadas
+antes. `ytr/limitador.py` é o freio de circuito: depois de dois ciclos
+seguidos com todos os canais falhando, ele para de tentar sozinho, e volta a
+tentar (uma sonda) quando o cooldown passa — sem perder nenhum canal no
+caminho. `doctor` mostra o estado (`limitador ABERTO/fechado`).
+
 ## Testar
 
 ```
