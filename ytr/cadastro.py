@@ -17,10 +17,9 @@ não fica pendente esperando o próximo ciclo — isso exigiria um segundo arqui
 só para "mensagens ainda não resolvidas", pelo preço de uma diferença que só importa
 para um handle que nunca vai existir.
 
-**Sinal do vídeo, hoje sem consumidor.** `gosto.carregar()` (Fase 6) só soma sinal de
-reação (`👍`/`👎`) num digest; um `{"tipo": "postado", ...}" ainda não afeta o
-ranqueamento. Fica gravado porque D3 pede o registro, e o consumo é trabalho de Fase 6/7
-revisitada, não desta.
+**Sinal do vídeo.** `gosto.carregar()` soma `{"tipo": "postado", ...}` na afinidade de
+canal, no mesmo peso de "ele salvou no vault" (D7) — postar link de vídeo no Discord é
+a versão em tempo real do mesmo gesto, não um sinal novo.
 """
 
 from __future__ import annotations

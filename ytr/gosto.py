@@ -169,6 +169,10 @@ def carregar(cfg, sinais: list[dict] | None = None, mapa_canal: dict | None = No
         elif sinal.get("reacao") == "👍":
             perfil.polegar_cima_canal[chave] += 1
             perfil.afinidade_canal[chave] += 1
+        elif sinal.get("tipo") == "postado":
+            # Mesmo sinal fraco que "ele salvou no vault" (D7): postar link de vídeo
+            # no Discord é a versão em tempo real do mesmo gesto, não um sinal novo.
+            perfil.afinidade_canal[chave] += 1
 
     perfil.indice = Indice([n.texto_de_perfil for n in perfil.notas])
     perfil.leitura_ms = (time.monotonic() - inicio) * 1000

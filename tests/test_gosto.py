@@ -165,6 +165,29 @@ class TestCarregarPerfil(Base):
         self.assertEqual(0, len(perfil.afinidade_canal))
         self.assertEqual(0, len(perfil.polegar_baixo_canal))
 
+    def test_video_postado_soma_afinidade_de_canal(self):
+        """`ytr.cadastro._sinalizar_video` grava `{"tipo": "postado", ...}` sem
+        `reacao` — é o sinal fraco de "ele postou isso", mesmo peso de "ele salvou
+        no vault" (D7)."""
+        sinais = [
+            {"handle": "@umcanal", "tipo": "postado", "video_id": "v1"},
+            {"handle": "@umcanal", "tipo": "postado", "video_id": "v2"},
+        ]
+        perfil = carregar(self.cfg, sinais=sinais)
+        self.assertEqual(2, perfil.afinidade_canal["umcanal"])
+        self.assertEqual(["umcanal"], perfil.canais_do_pool)
+
+    def test_video_postado_sem_handle_usa_channel_id(self):
+        sinais = [{"channel_id": "UC" + "1" * 22, "tipo": "postado", "video_id": "v1"}]
+        perfil = carregar(self.cfg, sinais=sinais)
+        self.assertEqual(1, perfil.afinidade_canal[("UC" + "1" * 22).casefold()])
+
+    def test_sinal_sem_reacao_nem_tipo_postado_nao_soma_nada(self):
+        """Um sinal desconhecido (nem reação, nem "postado") não deve contar como
+        afinidade em silêncio — só os tipos declarados somam."""
+        perfil = carregar(self.cfg, sinais=[{"handle": "@umcanal", "tipo": "algo_novo"}])
+        self.assertEqual(0, perfil.afinidade_canal["umcanal"])
+
     def test_a_pontuacao_de_afinidade_penaliza_o_polegar_baixo(self):
         perfil = carregar(self.cfg, sinais=[{"handle": "@ruim", "reacao": "👎"}])
         componentes = perfil.pontuar_afinidade(self.cfg, "UC…", "@ruim")

@@ -145,6 +145,7 @@ fonte de verdade; esta tabela é um resumo legível dela.
 | 2026-08-25 07:43 | `fe7c2c2` | Pool 2 — Short suprimido do aviso individual vira candidato do digest |
 | 2026-08-25 17:40 | `0c75076` | `LLM_BACKEND=anthropic` implementado de verdade (API direta, com chave) |
 | 2026-08-25 17:52 | `9d8bbe9` | `cadastrado_por` sai do `canais.yaml` versionado, vira ledger derivado |
+| 2026-08-25 19:49 | `b40d54e` | `docs/INDEX.md`: descrição, instalação, uso, linha do tempo e pendências |
 
 As dez fases do plano original (0–9) fecham em `70821df`. Tudo depois disso é
 manutenção e os itens que o próprio README marcava como "em aberto" — todos
@@ -153,7 +154,8 @@ resolvidos até `9d8bbe9`.
 ## Pendências / o que ainda falta implementar
 
 Nada aqui bloqueia o uso normal do radar — são gaps conhecidos, cada um com o
-motivo de ainda não ter sido feito.
+motivo de ainda não ter sido feito. Versão executável, em checklist:
+[`docs/CHECKLIST.md`](CHECKLIST.md).
 
 ### Documentado, mas sem código por trás
 
@@ -173,12 +175,6 @@ motivo de ainda não ter sido feito.
   sem nenhuma leitura/escrita real. A contenção de quota com o
   `discord-link-brain` hoje é só por agendamento (`YTR_DIGEST_AT` longe do
   `DLB_SYNC_AT`), como o próprio plano já assume em D5.
-- **Sinal de vídeo postado não entra no ranking.** Todo link de vídeo postado no
-  canal de entrada grava `{"tipo": "postado", ...}` em `sinais.jsonl`
-  (`ytr/cadastro.py:_sinalizar_video`), mas `gosto.carregar` só soma sinal de
-  reação (👍/👎) — o sinal fraco de "ele postou isso" nunca chega a
-  `pontuar_afinidade`. Documentado como pendência desde o commit original da
-  Fase 4/6.
 
 ### Pool 2 — só metade do que o plano descreve
 
