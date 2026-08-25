@@ -5,17 +5,17 @@ ainda falta implementar". Cada item tem o motivo e os arquivos envolvidos — qu
 for executar não precisa reabrir o plano original pra entender o contexto. Ordem
 sugerida: do mais isolado/barato pro mais estrutural.
 
-Concluído nesta rodada, fora da lista: **sinal de vídeo postado agora soma
-afinidade de canal** (`ytr/gosto.py:carregar`, tratando `{"tipo": "postado"}`).
+Concluído:
+
+- **Sinal de vídeo postado agora soma afinidade de canal**
+  (`ytr/gosto.py:carregar`, tratando `{"tipo": "postado"}`).
+- **`YTR_RESUMO_LLM` removida.** Era lida e nunca consultada; decisão foi não
+  implementar resumo por vídeo via modelo (violaria a garantia de D5 — LLM
+  nunca no caminho da notificação, que roda de 15 em 15 min) e tirar a
+  variável morta em vez de deixá-la sugerindo uma funcionalidade inexistente.
 
 ## 1. Documentado, mas sem código por trás
 
-- [ ] **Decidir o destino de `YTR_RESUMO_LLM`.** Hoje é lido em `Config`
-      (`ytr/config.py`) e não consultado por nenhum código — ligá-lo não faz
-      nada. Duas saídas: implementar um resumo por vídeo via modelo (custo de
-      quota rodando de 15 em 15 min, por isso o plano recomendava contra — D5),
-      ou remover a variável morta do `.env.example`/`Config` até haver decisão
-      de fazer de verdade.
 - [ ] **Decidir o destino de `LLM_BUDGET_DIR`.** Mesma situação: lido, nunca
       usado. Ou implementa o ledger de quota compartilhado com o
       `discord-link-brain` (dois `.state/` diferentes, precisa desenhar onde o

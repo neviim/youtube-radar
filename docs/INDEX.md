@@ -166,10 +166,6 @@ motivo de ainda não ter sido feito. Versão executável, em checklist:
   `ytr/texto.py:resumo`). Motivo original: a versão de `yt-dlp` disponível na
   máquina de referência não conseguia baixar legenda (§1.5 do plano) — precisa
   ser revalidado antes de implementar.
-- **Resumo por vídeo via modelo (`YTR_RESUMO_LLM`).** A variável é lida em
-  `Config` (`ytr/config.py`), mas nenhum caminho de código a consulta — não
-  existe função de resumo por modelo, só a narração agregada do digest
-  (`ytr/modelo.py:narrar`). Ligá-la hoje não tem efeito nenhum.
 - **Ledger de quota compartilhado entre projetos (`LLM_BUDGET_DIR`).** Lida em
   `Config`, documentada no `.env.example` como "opcional dos dois lados", mas
   sem nenhuma leitura/escrita real. A contenção de quota com o
