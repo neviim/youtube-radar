@@ -41,6 +41,7 @@ from . import config as mod_config
 from . import feed as mod_feed
 from . import gosto as mod_gosto
 from . import ledger as mod_ledger
+from . import limitador as mod_limitador
 from . import modelo as mod_modelo
 from . import pool as mod_pool
 from . import texto as mod_texto
@@ -395,6 +396,18 @@ def cmd_digest(args) -> int:
     preflight(cfg.state_dir)
 
     with mod_trava.travar(cfg.state_dir):
+        # O freio vale pra `--seco` também: uma avaliação ainda bate no YouTube
+        # (`resolver_pool`/`buscar_pool`), e é exatamente esse tráfego que abriu o
+        # freio em primeiro lugar. Só a captura de feedback (Discord, não YouTube)
+        # fica de fora — ela não é o que está sendo limitado.
+        freio = mod_limitador.carregar(cfg.state_dir)
+        if freio.aberto:
+            print(
+                f"⏸ freio aberto ({freio.motivo}) — adiando o digest, tenta de novo "
+                f"em {freio.segundos_restantes()}s."
+            )
+            return 2
+
         if not args.seco:
             for linha in mod_pool.capturar_feedback(cfg, discord):
                 print(linha)
@@ -615,6 +628,12 @@ def cmd_doctor(args) -> int:
     saude = Saude.carregar(cfg.state_dir)
     print(f"heartbeat       {saude.heartbeat or 'nunca'} (tolerância {cfg.health_tolerance}s)")
     print(f"ciclos ruins    {saude.ciclos_com_falha_total} seguidos com falha total")
+    freio = mod_limitador.carregar(cfg.state_dir)
+    if freio.aberto:
+        print(f"limitador       ABERTO (nível {freio.nivel}) — {freio.motivo}, {freio.segundos_restantes()}s restantes")
+        problemas.append(f"limitador aberto: {freio.motivo}")
+    else:
+        print("limitador       fechado (normal)")
     chamadas_llm_hoje = mod_modelo.chamadas_hoje(cfg.state_dir)
     print(
         f"llm             backend {cfg.llm_backend} · chamadas_llm_hoje: {chamadas_llm_hoje} "

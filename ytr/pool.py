@@ -29,6 +29,7 @@ nunca seria mostrado.
 from __future__ import annotations
 
 import statistics
+import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
@@ -118,6 +119,14 @@ def salvar_mapa_pool(state_dir, mapa: dict) -> None:
     )
 
 
+# Pausa entre resoluções **novas** (não entre as já cacheadas — aquelas não pedem
+# rede). Heurística, não medida: o objetivo é não disparar ~60 requisições de
+# ~1,5 MB cada de uma vez só, que é exatamente o padrão de tráfego que precedeu o
+# YouTube responder 404 pra tudo (Fase 9, `ytr.limitador`). Espaçar o burst é
+# mitigação proativa; o freio de circuito é a reação para quando isso não bastar.
+PAUSA_ENTRE_RESOLUCOES_NOVAS = 1.0
+
+
 def resolver_pool(perfil: Perfil, cliente: Cliente, mapa: dict) -> dict:
     """`handle -> channel_id`, resolvido uma vez na vida de cada canal do pool.
 
@@ -135,6 +144,7 @@ def resolver_pool(perfil: Perfil, cliente: Cliente, mapa: dict) -> dict:
         except CanalError:
             continue
         mapa[chave] = str(achado.channel_id)
+        time.sleep(PAUSA_ENTRE_RESOLUCOES_NOVAS)
     return mapa
 
 

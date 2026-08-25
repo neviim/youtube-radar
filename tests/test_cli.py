@@ -462,6 +462,25 @@ class TestDigest(Base):
         digest_relido = mod_ledger.carregar_digest(self.state, hoje)
         self.assertEqual("777", digest_relido.enviados[0].message_id, "não foi sobrescrito")
 
+    def test_freio_aberto_adia_o_digest_mesmo_em_seco(self):
+        """`--seco` ainda bate no YouTube (`resolver_pool`/`buscar_pool`) — é
+        exatamente esse tráfego que abre o freio, então `--seco` também respeita."""
+        from datetime import datetime, timezone
+
+        from ytr import ledger as mod_ledger
+        from ytr import limitador as mod_limitador
+
+        mod_limitador.abrir(self.state, "teste de limitação")
+
+        for argv in (["digest"], ["digest", "--seco"]):
+            with self.subTest(argv=argv):
+                codigo, saida, _ = rodar_cli(argv)
+                self.assertEqual(2, codigo)
+                self.assertIn("freio aberto", saida)
+
+        hoje = datetime.now(timezone.utc).date().isoformat()
+        self.assertIsNone(mod_ledger.carregar_digest(self.state, hoje), "nada foi gerado")
+
     def _digest_com_um_candidato_falso(self, titulo="Vídeo Teste", razao="canal que você já acompanha"):
         """Injeta um único candidato aprovado, sem tocar rede — para os testes da
         Fase 8, que não precisam exercitar o pool inteiro de novo."""
@@ -664,6 +683,19 @@ class TestDoctor(Base):
             os.chmod(self.state, stat.S_IRWXU)
         self.assertEqual(2, codigo)
         self.assertIn("NÃO GRAVÁVEL", saida)
+
+    def test_freio_aberto_aparece_como_problema(self):
+        from ytr import limitador as mod_limitador
+
+        mod_limitador.abrir(self.state, "teste de limitação")
+        codigo, saida, _ = rodar_cli(["doctor"])
+        self.assertEqual(2, codigo)
+        self.assertIn("limitador       ABERTO", saida)
+        self.assertIn("teste de limitação", saida)
+
+    def test_freio_fechado_diz_normal(self):
+        codigo, saida, _ = rodar_cli(["doctor"])
+        self.assertIn("limitador       fechado (normal)", saida)
 
 
 class TestGuardaDeMarcasEmTodoComando(Base):

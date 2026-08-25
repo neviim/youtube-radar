@@ -25,7 +25,7 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 
-from . import ledger, texto
+from . import ledger, limitador, texto
 from .canal import Canal, Canais
 from .config import Config
 from .discord_client import DiscordClient
@@ -204,6 +204,21 @@ def rodar(
             "`.state/saude.json` para voltar a avisar."
         )
 
+    freio = limitador.carregar(cfg.state_dir)
+    if freio.aberto:
+        # Nenhum canal marca falha nova, nenhum `proxima_busca` avança — cada um
+        # continua exatamente onde estava. "Arquivado", não perdido: retomam
+        # sozinhos assim que uma sonda (o próximo ciclo depois do cooldown) confirmar
+        # que o YouTube normalizou.
+        relatorio.linhas.append(
+            f"⏸ freio aberto ({freio.motivo}) — próxima tentativa em "
+            f"{freio.segundos_restantes()}s, nenhum canal buscado."
+        )
+        relatorio.bytes_gastos = cliente.bytes_gastos
+        saude.heartbeat = agora_utc()
+        saude.salvar(cfg.state_dir)
+        return relatorio
+
     alvos = []
     for canal in canais.ativos():
         atual = estado.carregar(canal.channel_id)
@@ -268,10 +283,31 @@ def rodar(
         pendentes.extend(Novidade(canal, v) for v in do_canal)
         estado.salvar(atual)
 
-    if relatorio.canais_buscados and relatorio.canais_com_falha == relatorio.canais_buscados:
-        saude.ciclos_com_falha_total += 1
-    else:
-        saude.ciclos_com_falha_total = 0
+    # `canais_buscados == 0` (nenhum canal devido neste ciclo) não é nem sucesso nem
+    # falha — é "não testamos nada". Contar isso como recuperação reabriria a porta
+    # cedo demais: um freio aberto some `alvos` inteiro (ver o `if freio.aberto`
+    # acima), então o ciclo seguinte teria `canais_buscados == 0` de novo e fecharia
+    # o freio sem nenhuma tentativa de verdade ter acontecido.
+    if relatorio.canais_buscados:
+        if relatorio.canais_com_falha == relatorio.canais_buscados:
+            saude.ciclos_com_falha_total += 1
+            if saude.ciclos_com_falha_total >= limitador.LIMIAR_CICLOS_RUINS:
+                freio_novo = limitador.abrir(
+                    cfg.state_dir,
+                    motivo=f"{relatorio.canais_com_falha} canal(is) falharam, "
+                           f"{saude.ciclos_com_falha_total}º ciclo seguido",
+                    agora=agora,
+                )
+                relatorio.linhas.append(
+                    f"⏸ freio aberto: YouTube parece estar limitando — próxima "
+                    f"tentativa em {freio_novo.segundos_restantes()}s."
+                )
+        else:
+            if saude.ciclos_com_falha_total:
+                # Vinha de uma sequência ruim e esta tentativa (a sonda, se o freio
+                # estava aberto) deu certo — fecha. Idempotente se não havia freio.
+                limitador.fechar(cfg.state_dir)
+            saude.ciclos_com_falha_total = 0
 
     _publicar(cfg, estado, relatorio, pendentes, publicador, saude, seco)
 

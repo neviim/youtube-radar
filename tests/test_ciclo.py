@@ -25,6 +25,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from ytr import ciclo as mod_ciclo
+from ytr import limitador as mod_limitador
 from ytr.canal import Canais, ChannelId
 from ytr.ciclo import (
     PostagemBloqueada, agendar, agendar_falha, devido, novidades, rodar, semear,
@@ -481,6 +482,95 @@ class TestFalhaDeCanal(Base):
         rodar(self.cfg, self.canais_com(CANAL_A), Estado(self.state),
               ClienteFalso({CANAL_A: RedeError("timeout")}), PublicadorFalso())
         self.assertEqual(1, Saude.carregar(self.state).ciclos_com_falha_total)
+
+
+class TestFreioDeCircuito(Base):
+    """O freio de circuito global contra o YouTube (`ytr.limitador`), acionado
+    quando o bloqueio parece ser do YouTube e não de um canal — ver docstring de
+    `ytr/limitador.py`."""
+
+    def _rodar_tudo_falhando(self, canal=CANAL_A):
+        # Força o canal a estar devido: em produção o recuo por falha (900s) e a
+        # cadência do agendador (também ~900s) coincidem, então o próximo ciclo real
+        # já o encontra devido de novo. Chamadas de teste, de volta em volta sem
+        # tempo passar, não têm essa sorte — sem isto, a segunda chamada veria
+        # `canais_buscados == 0` e não uma segunda falha de verdade.
+        estado = Estado(self.state)
+        atual = estado.carregar(canal)
+        atual.proxima_busca = ""
+        estado.salvar(atual)
+        return rodar(self.cfg, self.canais_com(canal), estado,
+                     ClienteFalso({canal: RedeError("timeout")}), PublicadorFalso())
+
+    def test_um_ciclo_ruim_nao_abre_o_freio(self):
+        """`LIMIAR_CICLOS_RUINS` é 2 — um só pode ser coincidência."""
+        self._rodar_tudo_falhando()
+        self.assertFalse(mod_limitador.bloqueado(self.state))
+
+    def test_dois_ciclos_ruins_seguidos_abrem_o_freio(self):
+        self._rodar_tudo_falhando()
+        self._rodar_tudo_falhando()
+        self.assertTrue(mod_limitador.bloqueado(self.state))
+
+    def test_com_o_freio_aberto_nenhuma_requisicao_e_feita(self):
+        """Arquivado, não perdido: o canal não marca falha nova, não avança
+        `proxima_busca` — continua exatamente onde estava."""
+        mod_limitador.abrir(self.state, "teste")
+        estado = Estado(self.state)
+        antes = estado.carregar(CANAL_A)
+
+        cliente = ClienteFalso({CANAL_A: (200, montar_feed(["aaaaaaaaaaa"]))})
+        relatorio = rodar(self.cfg, self.canais_com(CANAL_A), estado, cliente, PublicadorFalso())
+
+        self.assertEqual(0, cliente.requisicoes, "o freio aberto não deixa nem tentar")
+        self.assertEqual(0, relatorio.canais_buscados)
+        depois = estado.carregar(CANAL_A)
+        self.assertEqual(antes.proxima_busca, depois.proxima_busca)
+        self.assertEqual(antes.falhas, depois.falhas)
+
+    def _abrir_o_freio_de_verdade(self):
+        """Dois ciclos ruins de verdade — não `limitador.abrir` direto — porque é
+        assim que `saude.ciclos_com_falha_total` fica congelado em 2 (ou mais)
+        quando o freio abre, e é esse congelamento que faz a sonda seguinte decidir
+        em uma tentativa só, sem precisar acumular de novo."""
+        self._rodar_tudo_falhando()
+        self._rodar_tudo_falhando()
+        self.assertTrue(mod_limitador.bloqueado(self.state), "pré-condição do teste")
+
+    def _expirar_o_cooldown(self):
+        """Move `aberto_ate` para o passado sem mexer no nível — simula só a
+        passagem do tempo, não uma reabertura."""
+        freio = mod_limitador.carregar(self.state)
+        passado = (datetime.now(timezone.utc) - timedelta(seconds=1)).isoformat(timespec="seconds")
+        mod_limitador._salvar(self.state, mod_limitador.Freio(freio.nivel, passado, freio.motivo))
+
+    def test_sonda_bem_sucedida_fecha_o_freio(self):
+        self._abrir_o_freio_de_verdade()
+        self._expirar_o_cooldown()
+        self.assertFalse(mod_limitador.bloqueado(self.state), "o degrau já passou")
+
+        estado = Estado(self.state)
+        atual = estado.carregar(CANAL_A)
+        atual.proxima_busca = ""  # mesmo motivo do `_rodar_tudo_falhando`
+        estado.salvar(atual)
+
+        cliente = ClienteFalso({CANAL_A: (200, montar_feed(["aaaaaaaaaaa"]))})
+        rodar(self.cfg, self.canais_com(CANAL_A), estado, cliente, PublicadorFalso())
+
+        self.assertEqual(1, cliente.requisicoes, "a sonda tenta de verdade")
+        self.assertFalse(mod_limitador.bloqueado(self.state))
+        self.assertEqual(0, mod_limitador.carregar(self.state).nivel)
+
+    def test_sonda_malsucedida_escala_o_freio(self):
+        self._abrir_o_freio_de_verdade()
+        nivel_inicial = mod_limitador.carregar(self.state).nivel
+        self._expirar_o_cooldown()
+
+        self._rodar_tudo_falhando()  # a sonda, e ela falha de novo
+
+        freio_final = mod_limitador.carregar(self.state)
+        self.assertGreater(freio_final.nivel, nivel_inicial)
+        self.assertTrue(mod_limitador.bloqueado(self.state))
 
 
 class TestCadenciaDoCiclo(Base):

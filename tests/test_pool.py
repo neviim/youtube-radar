@@ -32,6 +32,13 @@ def _video(video_id, titulo="", publicado="", canal="", channel_id="", descricao
 
 
 class TestResolverPool(unittest.TestCase):
+    def setUp(self):
+        self._sleep_original = pool.time.sleep
+        pool.time.sleep = lambda s: None  # a pausa entre resoluções é real, o teste não precisa ser
+
+    def tearDown(self):
+        pool.time.sleep = self._sleep_original
+
     def test_resolve_so_o_que_ainda_nao_esta_no_mapa(self):
         chamadas = []
 
