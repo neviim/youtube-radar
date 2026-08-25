@@ -640,6 +640,9 @@ def cmd_doctor(args) -> int:
         f"llm             backend {cfg.llm_backend} · chamadas_llm_hoje: {chamadas_llm_hoje} "
         f"de {cfg.llm_max_dia}/dia"
     )
+    if cfg.llm_backend == "anthropic" and not cfg.anthropic_api_key:
+        print("                ANTHROPIC_API_KEY FALTA — narração degrada (ranking sem modelo)")
+        problemas.append("YTR_LLM_BACKEND=anthropic sem ANTHROPIC_API_KEY")
 
     if saude.postagem_bloqueada:
         print(f"postagem        BLOQUEADA — {saude.motivo}")

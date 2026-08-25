@@ -26,7 +26,7 @@ class Base(unittest.TestCase):
         self.tmp = TemporaryDirectory()
         self.dir = Path(self.tmp.name)
         self.ambiente = dict(os.environ)
-        for chave in [c for c in os.environ if c.startswith(("YTR_", "DISCORD_", "OBSIDIAN_"))]:
+        for chave in [c for c in os.environ if c.startswith(("YTR_", "DISCORD_", "OBSIDIAN_", "ANTHROPIC_"))]:
             del os.environ[chave]
 
     def tearDown(self):
@@ -66,6 +66,15 @@ class TestFromEnv(Base):
         self.assertFalse(cfg.avisar_shorts)
         self.assertTrue(cfg.pool2_ativo)
         self.assertEqual(3, cfg.pool2_janela_dias)
+        self.assertEqual("", cfg.anthropic_api_key)
+        self.assertEqual("claude-opus-5", cfg.anthropic_model)
+
+    def test_anthropic_api_key_e_lida_do_ambiente(self):
+        os.environ["ANTHROPIC_API_KEY"] = "sk-ant-teste"
+        os.environ["YTR_ANTHROPIC_MODEL"] = "claude-sonnet-5"
+        cfg = Config.from_env()
+        self.assertEqual("sk-ant-teste", cfg.anthropic_api_key)
+        self.assertEqual("claude-sonnet-5", cfg.anthropic_model)
         self.assertEqual("none", cfg.llm_backend)
         self.assertEqual(Path(".state"), cfg.state_dir)
 

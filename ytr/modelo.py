@@ -14,11 +14,17 @@ sempre. Não existe caminho de código onde o texto do modelo produz um item nov
 por isso o teste que prova isso (em `tests/test_cmd_digest` / `test_cli.py`) não
 precisa "pegar" uma injeção: ele só confirma que o cabeçalho muda e os itens não.
 
-Binário local, sem chave de API — mesmo desenho do `discord-link-brain`
-(`~/.claude`/`~/.codex` montados `:ro` no container, Fase 5). `claude-cli` usa
-`--output-format json` e lê `result`; `codex-cli` usa `--output-schema` porque a
-saída dele não tem envelope JSON previsível sem isso — o mesmo motivo que levou o
-projeto irmão a fazer igual (`dlb/sintese.py`).
+**Três backends.** `claude-cli`/`codex-cli` são binário local, sem chave de API —
+mesmo desenho do `discord-link-brain` (`~/.claude`/`~/.codex` montados `:ro` no
+container, Fase 5). `claude-cli` usa `--output-format json` e lê `result`;
+`codex-cli` usa `--output-schema` porque a saída dele não tem envelope JSON
+previsível sem isso — o mesmo motivo que levou o projeto irmão a fazer igual
+(`dlb/sintese.py`). `anthropic` é o quarto: API direta, com `ANTHROPIC_API_KEY`,
+pelo SDK oficial (pacote `anthropic`, importado só quando este backend é usado —
+não é dependência obrigatória de quem nunca liga `YTR_LLM_BACKEND=anthropic`).
+Não disputa o login local com o `discord-link-brain` (é outro caminho de
+autenticação inteiramente), mas ainda conta contra `YTR_LLM_MAX_DIA` — o teto é
+sobre "quantas vezes o digest chama modelo", não sobre qual credencial usa.
 """
 
 from __future__ import annotations
@@ -84,8 +90,10 @@ def narrar(cfg: Config, itens: list[dict]) -> str:
     """Devolve a prosa, ou levanta `ModeloError`. Quem chama decide o que fazer com a
     falha — por D5, o digest nunca para por causa disto, só degrada."""
     prompt = _prompt(itens)
-    if cfg.llm_backend in ("claude-cli", "anthropic"):
+    if cfg.llm_backend == "claude-cli":
         texto = _rodar_claude(cfg, prompt)
+    elif cfg.llm_backend == "anthropic":
+        texto = _rodar_anthropic(cfg, prompt)
     elif cfg.llm_backend == "codex-cli":
         texto = _rodar_codex(cfg, prompt)
     else:
@@ -110,6 +118,41 @@ def _rodar_claude(cfg: Config, prompt: str) -> str:
         return json.loads(proc.stdout)["result"]
     except (json.JSONDecodeError, KeyError) as erro:
         raise ModeloError(f"saída do claude não é o JSON esperado: {erro}") from erro
+
+
+def _rodar_anthropic(cfg: Config, prompt: str) -> str:
+    """API direta da Anthropic — chave, não login local. Import só aqui dentro: quem
+    nunca liga `YTR_LLM_BACKEND=anthropic` não precisa do pacote `anthropic` instalado.
+    """
+    if not cfg.anthropic_api_key:
+        raise ModeloError(
+            "YTR_LLM_BACKEND=anthropic exige ANTHROPIC_API_KEY (chave de API — "
+            "diferente do login local que YTR_LLM_BACKEND=claude-cli usa)."
+        )
+    try:
+        import anthropic
+    except ImportError as erro:
+        raise ModeloError(f"pacote `anthropic` não instalado (`pip install anthropic`): {erro}") from erro
+
+    cliente = anthropic.Anthropic(api_key=cfg.anthropic_api_key, timeout=cfg.llm_timeout)
+    try:
+        resposta = cliente.messages.create(
+            model=cfg.anthropic_model, max_tokens=500, system=SISTEMA,
+            messages=[{"role": "user", "content": prompt}],
+        )
+    except anthropic.AuthenticationError as erro:
+        raise ModeloError(f"ANTHROPIC_API_KEY rejeitada: {erro}") from erro
+    except anthropic.RateLimitError as erro:
+        raise ModeloError(f"limite de taxa da API da Anthropic: {erro}") from erro
+    except anthropic.APIConnectionError as erro:
+        raise ModeloError(f"não consegui conectar à API da Anthropic: {erro}") from erro
+    except anthropic.APIStatusError as erro:
+        raise ModeloError(f"API da Anthropic respondeu {erro.status_code}: {erro}") from erro
+
+    texto = next((bloco.text for bloco in resposta.content if bloco.type == "text"), "")
+    if not texto:
+        raise ModeloError("resposta da Anthropic sem bloco de texto")
+    return texto
 
 
 def _rodar_codex(cfg: Config, prompt: str) -> str:

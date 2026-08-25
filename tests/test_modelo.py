@@ -7,6 +7,8 @@ mesmo espírito de `_fingir_rede` em `test_cli.py`.
 """
 
 import json
+import sys
+import types
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -130,6 +132,134 @@ class TestNarrarCodex(Base):
 
     def test_arquivo_de_saida_ausente_vira_modelo_error(self):
         modelo.subprocess.run = lambda cmd, **kw: _ProcessoFalso()  # não escreve nada
+        with self.assertRaises(modelo.ModeloError):
+            modelo.narrar(self.cfg, [])
+
+
+class _BlocoDeTexto:
+    def __init__(self, texto):
+        self.type = "text"
+        self.text = texto
+
+
+class _RespostaFalsa:
+    def __init__(self, texto):
+        self.content = [_BlocoDeTexto(texto)]
+
+
+class _ErroFalso(Exception):
+    pass
+
+
+class _ErroDeStatusFalso(Exception):
+    def __init__(self, msg, status_code=500):
+        super().__init__(msg)
+        self.status_code = status_code
+
+
+def _modulo_anthropic_falso(cliente_ou_excecao):
+    """Um módulo `anthropic` de mentira, injetado em `sys.modules`. `cliente_ou_excecao`
+    é chamável com `(api_key, timeout)` e devolve algo com `.messages.create(...)`, ou
+    levanta direto — é o dublê do `anthropic.Anthropic(...)`."""
+    modulo = types.ModuleType("anthropic")
+    modulo.Anthropic = cliente_ou_excecao
+    modulo.AuthenticationError = _ErroFalso
+    modulo.RateLimitError = _ErroFalso
+    modulo.APIConnectionError = _ErroFalso
+    modulo.APIStatusError = _ErroDeStatusFalso
+    return modulo
+
+
+class TestNarrarAnthropic(Base):
+    def setUp(self):
+        super().setUp()
+        self.cfg = Config(llm_backend="anthropic", anthropic_api_key="sk-ant-teste",
+                           state_dir=self.state)
+        self._modulo_original = sys.modules.get("anthropic")
+
+    def tearDown(self):
+        if self._modulo_original is None:
+            sys.modules.pop("anthropic", None)
+        else:
+            sys.modules["anthropic"] = self._modulo_original
+        super().tearDown()
+
+    def _instalar(self, cliente_ou_excecao):
+        sys.modules["anthropic"] = _modulo_anthropic_falso(cliente_ou_excecao)
+
+    def test_devolve_o_texto_do_bloco_e_registra_a_chamada(self):
+        class ClienteFalso:
+            def __init__(self, api_key, timeout):
+                self.messages = self
+
+            def create(self, **kwargs):
+                self.chamada = kwargs
+                return _RespostaFalsa(" uma narração da api direta. ")
+
+        self._instalar(ClienteFalso)
+        texto = modelo.narrar(self.cfg, [{"titulo": "T", "canal": "C", "razao": "R"}])
+        self.assertEqual("uma narração da api direta.", texto)
+        self.assertEqual(1, modelo.chamadas_hoje(self.state))
+
+    def test_sem_chave_vira_modelo_error_sem_importar_o_pacote(self):
+        cfg = Config(llm_backend="anthropic", anthropic_api_key="", state_dir=self.state)
+        with self.assertRaises(modelo.ModeloError) as erro:
+            modelo.narrar(cfg, [])
+        self.assertIn("ANTHROPIC_API_KEY", str(erro.exception))
+        self.assertEqual(0, modelo.chamadas_hoje(self.state))
+
+    def test_pacote_ausente_vira_modelo_error(self):
+        sys.modules.pop("anthropic", None)
+        import builtins
+        original_import = builtins.__import__
+
+        def fake_import(nome, *args, **kwargs):
+            if nome == "anthropic":
+                raise ModuleNotFoundError("No module named 'anthropic'")
+            return original_import(nome, *args, **kwargs)
+
+        builtins.__import__ = fake_import
+        try:
+            with self.assertRaises(modelo.ModeloError) as erro:
+                modelo.narrar(self.cfg, [])
+        finally:
+            builtins.__import__ = original_import
+        self.assertIn("anthropic", str(erro.exception))
+
+    def test_erro_de_autenticacao_vira_modelo_error(self):
+        class ClienteFalso:
+            def __init__(self, api_key, timeout):
+                self.messages = self
+
+            def create(self, **kwargs):
+                raise sys.modules["anthropic"].AuthenticationError("chave inválida")
+
+        self._instalar(ClienteFalso)
+        with self.assertRaises(modelo.ModeloError):
+            modelo.narrar(self.cfg, [])
+        self.assertEqual(0, modelo.chamadas_hoje(self.state), "falha não conta como chamada")
+
+    def test_limite_de_taxa_vira_modelo_error(self):
+        class ClienteFalso:
+            def __init__(self, api_key, timeout):
+                self.messages = self
+
+            def create(self, **kwargs):
+                raise sys.modules["anthropic"].RateLimitError("429")
+
+        self._instalar(ClienteFalso)
+        with self.assertRaises(modelo.ModeloError):
+            modelo.narrar(self.cfg, [])
+
+    def test_resposta_sem_bloco_de_texto_vira_modelo_error(self):
+        class ClienteFalso:
+            def __init__(self, api_key, timeout):
+                self.messages = self
+
+            def create(self, **kwargs):
+                return _RespostaFalsa("")
+
+        self._instalar(ClienteFalso)
         with self.assertRaises(modelo.ModeloError):
             modelo.narrar(self.cfg, [])
 

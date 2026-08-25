@@ -66,6 +66,7 @@ class Base(unittest.TestCase):
         # os pega — e sem isto eles sobreviveriam do shell de quem roda a suíte.
         os.environ.pop("DISCORD_TOKEN", None)
         os.environ.pop("OBSIDIAN_VAULT", None)
+        os.environ.pop("ANTHROPIC_API_KEY", None)
         os.environ["YTR_STATE_DIR"] = str(self.state)
         os.environ["YTR_CANAIS"] = str(self.canais_yaml)
 
@@ -683,6 +684,18 @@ class TestDoctor(Base):
             os.chmod(self.state, stat.S_IRWXU)
         self.assertEqual(2, codigo)
         self.assertIn("NÃO GRAVÁVEL", saida)
+
+    def test_backend_anthropic_sem_chave_aparece_como_problema(self):
+        os.environ["YTR_LLM_BACKEND"] = "anthropic"
+        codigo, saida, _ = rodar_cli(["doctor"])
+        self.assertEqual(2, codigo)
+        self.assertIn("ANTHROPIC_API_KEY", saida)
+
+    def test_backend_anthropic_com_chave_nao_acusa_o_llm(self):
+        os.environ["YTR_LLM_BACKEND"] = "anthropic"
+        os.environ["ANTHROPIC_API_KEY"] = "sk-ant-teste"
+        _, saida, _ = rodar_cli(["doctor"])
+        self.assertNotIn("ANTHROPIC_API_KEY FALTA", saida)
 
     def test_freio_aberto_aparece_como_problema(self):
         from ytr import limitador as mod_limitador

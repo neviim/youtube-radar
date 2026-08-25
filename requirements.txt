@@ -1,2 +1,5 @@
 requests>=2.31
 PyYAML>=6.0
+
+# Opcional: só necessário com YTR_LLM_BACKEND=anthropic (ytr/modelo.py).
+# anthropic>=0.40

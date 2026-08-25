@@ -24,7 +24,8 @@ de verdade, não só teste com dublê. Em ordem:
 5. Docker (`dev`/`prod`, healthcheck, roda como seu usuário, não root)
 6. Perfil de gosto, lido do vault (somente leitura)
 7. Pool de recomendação e digest diário
-8. Narração opcional por modelo local (`claude`/`codex`), nunca decide
+8. Narração opcional por modelo (`claude`/`codex` local, ou API direta da
+   Anthropic com `ANTHROPIC_API_KEY`), nunca decide
 9. `doctor` — diagnóstico e os números que tornam os gatilhos do plano conferíveis
 
 ## Configurar
@@ -106,9 +107,6 @@ mensagens de commit de cada fase.
 
 ## O que falta / decisões em aberto
 
-- **`LLM_BACKEND=anthropic`** (API direta, com chave) está documentado no
-  `.env.example` mas não implementado — hoje só `claude-cli` e `codex-cli`
-  (binário local) funcionam.
 - **`cadastrado_por` em `curadoria/canais.yaml`**: cada cadastro real pelo
   Discord grava o id de quem postou, e esse arquivo é versionado. Ainda não
   decidimos se isso deve continuar sendo persistido no arquivo rastreado pelo
