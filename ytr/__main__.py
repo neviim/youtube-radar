@@ -579,6 +579,15 @@ def cmd_doctor(args) -> int:
         ativos = len(canais.ativos())
         print(f"monitorados     {ativos} de {TETO_MONITORADOS} (teto)")
 
+    # Pool e corpus não pedem rede: `mapa_canal`/`sinais` são cache local, e
+    # `gosto.carregar` degrada sozinho com vault ausente (perfil quase vazio, não erro)
+    # — por isso rodam mesmo quando `OBSIDIAN_VAULT` apareceu como FALTA acima.
+    mapa_canal, _ = _mapa_canal(cfg)
+    perfil = mod_gosto.carregar(cfg, sinais=mod_ledger.sinais(cfg.state_dir), mapa_canal=mapa_canal)
+    print(f"pool            {len(perfil.canais_do_pool)} canal(is) (Pool 1, do vault)")
+    folga_corpus = "ok" if perfil.corpus_chars <= cfg.corpus_max_chars else "ESTOUROU"
+    print(f"corpus          {perfil.corpus_chars} de {cfg.corpus_max_chars} chars ({folga_corpus})")
+
     estado = Estado(cfg.state_dir)
     todos = estado.todos()
     bytes_ciclo = sum(e.bytes_ultimo_ciclo for e in todos)

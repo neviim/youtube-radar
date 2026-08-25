@@ -606,8 +606,16 @@ class TestDoctor(Base):
         codigo, saida, _ = rodar_cli(["doctor"])
         self.assertEqual(2, codigo, "sem DISCORD_TOKEN nem vault, o doctor acusa")
         self.assertIn(f"1 de {cli.TETO_MONITORADOS}", saida)
-        for rotulo in ("banda", "falhas", "heartbeat", "llm", "postagem", ".state"):
+        for rotulo in ("banda", "falhas", "heartbeat", "llm", "postagem", ".state", "pool", "corpus"):
             self.assertIn(rotulo, saida)
+
+    def test_gatilho_de_pool_e_corpus_mostram_o_numero_contra_o_limiar(self):
+        """Fase 9: cada gatilho do plano vira número ao lado do seu limiar — não só um
+        rótulo verde. `pool`/`corpus` são os dois que faltavam (banda, monitorados,
+        falhas, heartbeat e llm já existiam de fases anteriores)."""
+        codigo, saida, _ = rodar_cli(["doctor"])
+        self.assertIn("pool", saida)
+        self.assertIn(f"corpus          0 de {cli.Config().corpus_max_chars} chars (ok)", saida)
 
     def test_nomeia_a_variavel_que_falta_em_vez_de_um_rotulo_generico(self):
         codigo, saida, _ = rodar_cli(["doctor"])
