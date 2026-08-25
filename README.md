@@ -8,7 +8,9 @@ Cadastro de canal também é pelo Discord: poste o link de um canal no canal de
 entrada e o bot resolve, confirma e passa a monitorar sozinho.
 
 Plano completo, decisões e critérios de pronto de cada fase:
-`~/.buzz/.scratch/PLANO_CLAUDE_youtube_radar.md`.
+`~/.buzz/.scratch/PLANO_CLAUDE_youtube_radar.md`. Documentação completa —
+descrição, instalação, uso, linha do tempo do desenvolvimento e pendências
+conhecidas: [`docs/INDEX.md`](docs/INDEX.md).
 
 ## O que já funciona
 
@@ -101,7 +103,7 @@ caminho. `doctor` mostra o estado (`limitador ABERTO/fechado`).
 ./testar.py --help             # todos os modos
 ```
 
-360+ testes, sem rede nem Docker — os módulos que tocam rede ou Discord usam
+400+ testes, sem rede nem Docker — os módulos que tocam rede ou Discord usam
 dublê. O que foi verificado contra infraestrutura real está documentado nas
 mensagens de commit de cada fase.
 
@@ -112,7 +114,8 @@ ytr/            código do radar (12+ módulos)
 tests/          suíte de testes, um arquivo por módulo
 docker/         Dockerfile, entrypoint, scheduler
 curadoria/      canais.yaml — a lista de canais monitorados, editável à mão
-docs/           VENDORADO.md (o que foi copiado do discord-link-brain, e por quê)
+docs/           INDEX.md (documentação completa) e VENDORADO.md (o que foi
+                copiado do discord-link-brain, e por quê)
 testar.py       runner de testes com saída legível
 ytr.sh          wrapper de Docker
 ```
