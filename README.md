@@ -105,13 +105,6 @@ caminho. `doctor` mostra o estado (`limitador ABERTO/fechado`).
 dublê. O que foi verificado contra infraestrutura real está documentado nas
 mensagens de commit de cada fase.
 
-## O que falta / decisões em aberto
-
-- **`cadastrado_por` em `curadoria/canais.yaml`**: cada cadastro real pelo
-  Discord grava o id de quem postou, e esse arquivo é versionado. Ainda não
-  decidimos se isso deve continuar sendo persistido no arquivo rastreado pelo
-  git.
-
 ## Estrutura
 
 ```

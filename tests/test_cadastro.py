@@ -106,6 +106,26 @@ class TestCanalNovo(Base):
         self.assertTrue(atual.semeado)
         self.assertTrue(atual.ja_avisou("v1"))
 
+    def test_quem_cadastrou_vai_para_o_ledger_nao_para_o_canais_yaml(self):
+        """`canais.yaml` é versionado; o id do Discord de quem postou não pode ir
+        para um histórico de git para sempre (decisão revisitada do D9)."""
+        discord = DiscordFalso([_mensagem(1, "42", "https://youtube.com/@canalteste")])
+        self._processar(discord)
+
+        cadastros = ledger.cadastros(self.state)
+        self.assertEqual(1, len(cadastros))
+        self.assertEqual(str(CANAL_ID), cadastros[0]["channel_id"])
+        self.assertEqual("42", cadastros[0]["autor_id"])
+
+        conteudo = self.canais_yaml.read_text(encoding="utf-8")
+        self.assertNotIn("42", conteudo)
+        self.assertNotIn("cadastrado_por", conteudo)
+
+    def test_seco_nao_grava_no_ledger_de_cadastros(self):
+        discord = DiscordFalso([_mensagem(1, "42", "https://youtube.com/@canalteste")])
+        self._processar(discord, seco=True)
+        self.assertEqual([], ledger.cadastros(self.state))
+
     def test_seco_nao_escreve_nada(self):
         discord = DiscordFalso([_mensagem(1, "42", "https://youtube.com/@canalteste")])
         relatorio = self._processar(discord, seco=True)

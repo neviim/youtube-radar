@@ -307,7 +307,6 @@ class Canal:
     nome: str = ""
     url_original: str = ""
     cadastrado_em: str = ""
-    cadastrado_por: str = ""
     ativo: bool = True
     avisar_shorts: bool = False
     transcricao: bool = False
@@ -324,6 +323,11 @@ class Canais:
 
     O arquivo tem mais de um comando que escreve (o ciclo e o `canais desativar`). A
     exclusão vem do `flock` de `ytr.trava`, não do desenho — e isso tem teste.
+
+    **Não guarda quem cadastrou.** Este arquivo é versionado (`git`) de propósito —
+    é a curadoria dele, quer ficar visível e diffável. O id do Discord de quem
+    postou o link não pertence a um histórico de git para sempre; isso vive em
+    `ledger.cadastros` (`.state/`, derivado, não rastreado).
     """
 
     def __init__(self, caminho: Path):

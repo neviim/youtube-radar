@@ -199,6 +199,30 @@ def candidatos_pool2_recentes(state_dir: Path, dias: int) -> list[dict]:
     return sorted(por_video.values(), key=lambda r: r.get("em", ""))
 
 
+# ---------------------------------------------------------------- cadastros
+
+
+def caminho_cadastros(state_dir: Path) -> Path:
+    return Path(state_dir) / "cadastros.jsonl"
+
+
+def registrar_cadastro(state_dir: Path, channel_id: str, autor_id: str) -> None:
+    """Quem cadastrou qual canal, pelo Discord — fora de `curadoria/canais.yaml` de
+    propósito. Esse arquivo é versionado (decisão deliberada: é a curadoria dele,
+    quer ficar visível e diffável); o id do Discord de quem postou o link não
+    pertence a um histórico de git para sempre. Isto é derivado, não curadoria —
+    perdê-lo não perde nenhum canal monitorado.
+    """
+    anexar_linha(
+        caminho_cadastros(state_dir),
+        {"em": agora_utc(), "channel_id": channel_id, "autor_id": autor_id},
+    )
+
+
+def cadastros(state_dir: Path) -> list[dict]:
+    return ler_linhas(caminho_cadastros(state_dir))
+
+
 # ------------------------------------------------------------------- sinais
 
 

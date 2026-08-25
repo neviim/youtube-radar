@@ -96,15 +96,20 @@ def _resolver_com_tentativas(alvo: Alvo, cliente: Cliente):
 
 
 def _registrar_canal(canais: Canais, estado: Estado, cfg: Config, achado, alvo: Alvo, autor_id: str):
-    """Mesma sequência de `cmd_resolver --salvar`: cadastra e semeia sem avisar."""
+    """Mesma sequência de `cmd_resolver --salvar`: cadastra e semeia sem avisar.
+
+    Quem cadastrou vai para `ledger.registrar_cadastro` (`.state/`), não para
+    `canais.yaml`: esse arquivo é versionado, e o id do Discord de quem postou não
+    pertence ao histórico do git para sempre.
+    """
     canal = canais.adicionar(
         achado.channel_id,
         handle=achado.handle or alvo.handle,
         nome=achado.nome,
         url_original=alvo.url,
-        cadastrado_por=autor_id,
     )
     canais.salvar()
+    ledger.registrar_cadastro(cfg.state_dir, str(achado.channel_id), autor_id)
 
     atual = estado.carregar(str(achado.channel_id))
     for video_id in achado.videos_atuais:

@@ -23,9 +23,10 @@ from ytr import ledger
 from ytr.canal import Canal
 from ytr.feed import Video
 from ytr.ledger import (
-    DECISOES, Digest, ItemDeDigest, avisos_recentes, caminho_avisos, caminho_digest,
-    caminho_pool2, candidatos_pool2_recentes, carregar_digest, digests_recentes,
-    registrar_aviso, registrar_candidato_pool2, registrar_sinal, salvar_digest, sinais,
+    DECISOES, Digest, ItemDeDigest, avisos_recentes, cadastros, caminho_avisos,
+    caminho_cadastros, caminho_digest, caminho_pool2, candidatos_pool2_recentes,
+    carregar_digest, digests_recentes, registrar_aviso, registrar_cadastro,
+    registrar_candidato_pool2, registrar_sinal, salvar_digest, sinais,
 )
 from ytr.state import anexar_linha
 
@@ -148,6 +149,25 @@ class TestSinais(Base):
 
     def test_sem_arquivo_a_lista_e_vazia(self):
         self.assertEqual([], sinais(self.dir))
+
+
+class TestCadastros(Base):
+    def test_registrar_e_reler(self):
+        registrar_cadastro(self.dir, CANAL_A, "42")
+        registros = cadastros(self.dir)
+        self.assertEqual(1, len(registros))
+        self.assertEqual(CANAL_A, registros[0]["channel_id"])
+        self.assertEqual("42", registros[0]["autor_id"])
+        self.assertTrue(registros[0]["em"])
+
+    def test_sem_arquivo_a_lista_e_vazia(self):
+        self.assertEqual([], cadastros(self.dir))
+
+    def test_nao_e_arquivo_mensal_como_avisos(self):
+        """Cadastro é raro — um arquivo só, no espírito de `sinais.jsonl`, não do
+        `avisos/AAAA-MM.jsonl` (alto volume, esse sim precisa de rotação)."""
+        registrar_cadastro(self.dir, CANAL_A, "42")
+        self.assertEqual("cadastros.jsonl", caminho_cadastros(self.dir).name)
 
 
 class TestPool2(Base):
