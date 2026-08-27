@@ -57,3 +57,25 @@ Concluído:
       (nem local, nem no GitHub) — só `feat/v1`, que é também a branch padrão
       hoje no remoto. Se a intenção é abrir PR em algum momento, criar `main`
       e mover o fluxo de push para PR + merge antes que `feat/v1` cresça mais.
+- [ ] **Recriar o `DISCORD_TOKEN` de produção.** O token em
+      `/opt/youtube-radar/.env` (servidor `192.168.15.17`) é rejeitado pelo
+      Discord com `401 Unauthorized` — testado direto contra `GET
+      /users/@me` com o token exato do `.env`, via `curl`, sem passar pelo
+      código do projeto. `doctor` mostra `DISCORD_TOKEN ok` porque só confere
+      se a variável está preenchida, não se o Discord aceita — mesma
+      pegadinha do healthcheck, que só olha o heartbeat do laço. Efeito
+      prático: cadastro de canal por Discord (`ytr/cadastro.py`) e aviso de
+      vídeo novo não funcionam agora, embora o ciclo continue rodando normal
+      pro resto (RSS, `curadoria/canais.yaml`).
+
+      Este é o mesmo tipo de pendência do `discord-link-brain`
+      (`docs/CHECKLIST.md` de lá), mas **bot diferente** — reset separado:
+      1. <https://discord.com/developers/applications> → a aplicação **do
+         youtube-radar** → aba **Bot** → **Reset Token**. Cuidado pra não
+         confundir com o Client Secret da aba OAuth2.
+      2. Atualizar `DISCORD_TOKEN=` em `/opt/youtube-radar/.env`, no
+         servidor.
+      3. `./ytr.sh prod up` pra recriar o container com o token novo —
+         `restart` não relê o `.env`.
+      4. Verificar: `docker logs --tail 20 ytr-prod` não deve mais mostrar
+         `401` na linha `cadastro: não consegui ler ...`.
