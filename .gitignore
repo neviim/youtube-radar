@@ -8,6 +8,9 @@
 # Estado local da máquina: cursor por canal, ledger de digest, sinais, locks.
 .state/
 
+# Lock do deploy/deploy.sh — nasce na raiz em produção a cada execução, nunca é código.
+/.deploy.lock
+
 # Python
 __pycache__/
 *.py[cod]
