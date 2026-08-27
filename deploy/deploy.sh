@@ -3,9 +3,13 @@
 # youtube-radar no servidor de produção, via SSH — sem sudo, sem senha,
 # depois que deploy/bootstrap-servidor.sh rodou lá uma vez.
 #
-#   ./deploy/deploy.sh              atualiza para o commit mais novo da branch
+#   ./deploy/deploy.sh              atualiza (ou sobe, se ainda não estiver rodando)
 #   ./deploy/deploy.sh --seco       mostra o que mudaria, sem tocar em nada
 #   ./deploy/deploy.sh --status     só mostra o commit e a saúde do container remoto
+#
+# Idempotente: se o commit já é o mais novo mas o container não está rodando
+# (primeiro deploy depois do bootstrap, ou container caído), sobe mesmo assim
+# — não depende de ter commit novo pra agir.
 #
 # Se algo não commitado for encontrado na pasta remota, ou o container não
 # ficar saudável depois do rebuild, o deploy é abortado / revertido sozinho
@@ -67,22 +71,32 @@ fi
 git fetch origin "$BRANCH"
 PREV="\$(git rev-parse HEAD)"
 NEW="\$(git rev-parse origin/$BRANCH)"
+UP_TO_DATE=0
+[[ "\$PREV" == "\$NEW" ]] && UP_TO_DATE=1
 
-if [[ "\$PREV" == "\$NEW" ]]; then
-    echo "já está no commit mais novo (\${PREV:0:7}) — nada pra atualizar."
+RUNNING="\$(docker inspect --format '{{.State.Running}}' ytr-prod 2>/dev/null || echo false)"
+
+if [[ "\$UP_TO_DATE" == 1 && "\$RUNNING" == true ]]; then
+    echo "já está no commit mais novo (\${PREV:0:7}) e o container está rodando — nada pra fazer."
     exit 0
 fi
 
-echo "atualizando \${PREV:0:7} -> \${NEW:0:7}:"
-git log --oneline "\$PREV..\$NEW"
+if [[ "\$UP_TO_DATE" == 1 ]]; then
+    echo "commit já é o mais novo (\${PREV:0:7}); container não está rodando — subindo mesmo assim."
+else
+    echo "atualizando \${PREV:0:7} -> \${NEW:0:7}:"
+    git log --oneline "\$PREV..\$NEW"
+fi
 
 if [[ "\$DRY_RUN" == 1 ]]; then
     echo "(--seco: parei aqui, nada foi tocado)"
     exit 0
 fi
 
-git checkout "$BRANCH"
-git merge --ff-only "origin/$BRANCH"
+if [[ "\$UP_TO_DATE" != 1 ]]; then
+    git checkout "$BRANCH"
+    git merge --ff-only "origin/$BRANCH"
+fi
 
 if [[ ! -f .env ]]; then
     echo "erro: não há .env em $DEPLOY_DIR — copie de .env.example e preencha antes de subir" >&2
