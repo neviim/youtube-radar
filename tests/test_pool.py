@@ -13,6 +13,7 @@ O pool de recomendação e o digest (Fase 7, D7 do plano):
 
 import unittest
 from dataclasses import replace
+from datetime import datetime, timedelta, timezone
 
 from ytr import ledger, pool
 from ytr.canal import CanalError, Resolucao
@@ -310,6 +311,7 @@ class TestCapturarFeedback(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         self.state = Path(self.tmp.name)
         self.cfg = Config(canal_aviso="222", state_dir=self.state, janela_feedback_dias=7)
+        self.dia = (datetime.now(timezone.utc).date() - timedelta(days=1)).isoformat()
 
     def tearDown(self):
         self.tmp.cleanup()
@@ -321,7 +323,7 @@ class TestCapturarFeedback(unittest.TestCase):
         ledger.salvar_digest(self.state, digest)
 
     def test_grava_sinal_de_reacao_humana(self):
-        self._digest_com_item_enviado("2026-08-23")
+        self._digest_com_item_enviado(self.dia)
         discord = DiscordFalso({("555", "👍"): [{"id": "42", "username": "jads"}]})
 
         linhas = pool.capturar_feedback(self.cfg, discord)
@@ -334,13 +336,13 @@ class TestCapturarFeedback(unittest.TestCase):
         self.assertEqual("v1", sinais[0]["video_id"])
 
     def test_ignora_reacao_do_proprio_bot(self):
-        self._digest_com_item_enviado("2026-08-23")
+        self._digest_com_item_enviado(self.dia)
         discord = DiscordFalso({("555", "👍"): [{"id": "99", "bot": True}]})
         pool.capturar_feedback(self.cfg, discord)
         self.assertEqual([], ledger.sinais(self.state))
 
     def test_reler_a_mesma_janela_nao_duplica(self):
-        self._digest_com_item_enviado("2026-08-23")
+        self._digest_com_item_enviado(self.dia)
         discord = DiscordFalso({("555", "👍"): [{"id": "42"}]})
         pool.capturar_feedback(self.cfg, discord)
         pool.capturar_feedback(self.cfg, discord)
