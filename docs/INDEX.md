@@ -166,11 +166,6 @@ motivo de ainda não ter sido feito. Versão executável, em checklist:
   `ytr/texto.py:resumo`). Motivo original: a versão de `yt-dlp` disponível na
   máquina de referência não conseguia baixar legenda (§1.5 do plano) — precisa
   ser revalidado antes de implementar.
-- **Ledger de quota compartilhado entre projetos (`LLM_BUDGET_DIR`).** Lida em
-  `Config`, documentada no `.env.example` como "opcional dos dois lados", mas
-  sem nenhuma leitura/escrita real. A contenção de quota com o
-  `discord-link-brain` hoje é só por agendamento (`YTR_DIGEST_AT` longe do
-  `DLB_SYNC_AT`), como o próprio plano já assume em D5.
 
 ### Pool 2 — só metade do que o plano descreve
 

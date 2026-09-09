@@ -115,7 +115,6 @@ class Config:
     # modelo
     llm_backend: str = "none"
     llm_max_dia: int = 1
-    llm_budget_dir: str = ""
     claude_bin: str = "claude"
     codex_bin: str = "codex"
     llm_timeout: float = 60.0
@@ -171,7 +170,6 @@ class Config:
             janela_feedback_dias=_int("YTR_JANELA_FEEDBACK_DIAS", 7),
             llm_backend=backend,
             llm_max_dia=_int("YTR_LLM_MAX_DIA", 1),
-            llm_budget_dir=os.environ.get("LLM_BUDGET_DIR", "").strip(),
             claude_bin=os.environ.get("CLAUDE_BIN", "claude").strip() or "claude",
             codex_bin=os.environ.get("CODEX_BIN", "codex").strip() or "codex",
             llm_timeout=_float("YTR_LLM_TIMEOUT", 60.0),

@@ -13,14 +13,14 @@ Concluído:
   implementar resumo por vídeo via modelo (violaria a garantia de D5 — LLM
   nunca no caminho da notificação, que roda de 15 em 15 min) e tirar a
   variável morta em vez de deixá-la sugerindo uma funcionalidade inexistente.
+- **`LLM_BUDGET_DIR` removida.** Mesma situação: lida e nunca usada. Decisão
+  foi remover em vez de implementar o ledger de quota compartilhado com o
+  `discord-link-brain` — a contenção entre os dois projetos continua só por
+  agendamento (`YTR_DIGEST_AT` longe do `DLB_SYNC_AT`), como o plano já
+  assume em D5. Reimplementar fica fácil se virar prioridade.
 
 ## 1. Documentado, mas sem código por trás
 
-- [ ] **Decidir o destino de `LLM_BUDGET_DIR`.** Mesma situação: lido, nunca
-      usado. Ou implementa o ledger de quota compartilhado com o
-      `discord-link-brain` (dois `.state/` diferentes, precisa desenhar onde o
-      lock mora — D5 do plano já aponta que isso exige um terceiro lugar que
-      hoje não existe), ou remove a variável até isso ser prioridade.
 - [ ] **Revalidar `yt-dlp` e decidir a transcrição (degrau 3 do resumo, D4).**
       Pré-requisito: atualizar o `yt-dlp` instalado e medir de novo contra o
       YouTube atual (a versão de referência falhava com saída vazia e código
